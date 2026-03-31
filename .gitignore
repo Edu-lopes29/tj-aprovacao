@@ -1,0 +1,25 @@
+# Credenciais
+.env
+
+# Arquivos pesados
+*.pdf
+*.xlsx
+*.txt
+*.jpeg
+*.jpg
+*.png
+
+# Questões (arquivo grande, gerado)
+questoes_data.js
+
+# Node
+node_modules/
+package.json
+package-lock.json
+
+# Scripts temporários
+*.backup*.html
+
+# Windows
+desktop.ini
+Thumbs.db

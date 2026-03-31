@@ -1,0 +1,2668 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TJ — Planner de Aprovação</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0F1117;--card:#1A1D27;--sidebar:#13151E;--border:#2A2D3E;
+  --text:#E8EAF0;--text2:#9AA0B8;--text3:#6B7194;
+  --proximo-bg:#1E2035;--iniciado-bg:#0F2035;--revisar-bg:#2A1A0F;--finalizado-bg:#0F2A1A;
+  --proximo-border:#3A3F5C;--iniciado-border:#1D4A7A;--revisar-border:#6B3A1A;--finalizado-border:#1A5A3A;
+  --radius:12px;--radius-sm:8px;--shadow:0 4px 24px rgba(0,0,0,0.5);
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#3A3D52}
+.header{background:var(--sidebar);border-bottom:1px solid var(--border);padding:14px 24px;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.header-title{font-family:'Outfit',sans-serif;font-size:1.25rem;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;background:linear-gradient(135deg,#8B83FF,#A78BFA,#EC4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.header-right{display:flex;align-items:center;gap:20px;margin-left:auto;flex-wrap:wrap}
+.countdown{display:flex;gap:6px;align-items:center}
+.countdown-unit{text-align:center;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:5px 10px;min-width:52px}
+.countdown-num{font-family:'Outfit',sans-serif;font-size:1.35rem;font-weight:700;color:#A78BFA;line-height:1}
+.countdown-lbl{font-size:0.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.countdown-sep{font-size:1.1rem;color:var(--text3);align-self:flex-start;margin-top:6px}
+.overall-progress{display:flex;flex-direction:column;gap:4px;min-width:150px}
+.overall-progress-label{font-size:0.73rem;color:var(--text2);display:flex;justify-content:space-between}
+.progress-bar-wrap{background:var(--border);border-radius:99px;height:7px;overflow:hidden}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,#6C63FF,#A78BFA);border-radius:99px;transition:width 0.5s ease;min-width:0}
+.main-nav{display:flex;gap:0;background:var(--sidebar);border-bottom:1px solid var(--border);padding:0 20px}
+.main-tab{font-family:'Outfit',sans-serif;font-size:0.88rem;font-weight:600;padding:13px 20px;cursor:pointer;border:none;background:none;color:var(--text2);border-bottom:3px solid transparent;transition:all 0.2s}
+.main-tab:hover{color:var(--text)}
+.main-tab.active{color:#A78BFA;border-bottom-color:#6C63FF}
+.tab-content{display:none;padding:20px 24px;min-height:calc(100vh - 115px);overflow-x:hidden}
+.tab-content.active{display:block}
+.quiz-container{max-width:780px;margin:0 auto}
+.quiz-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:10px}
+.quiz-progress{font-size:0.82rem;color:var(--text2);font-weight:600}
+.quiz-score{font-size:0.82rem;color:var(--text2);background:var(--card);border:1px solid var(--border);padding:4px 14px;border-radius:99px}
+.quiz-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px 28px 22px}
+.quiz-disciplina{font-size:0.74rem;font-weight:700;letter-spacing:0.08em;color:#A78BFA;text-transform:uppercase;margin-bottom:12px}
+.quiz-enunciado{font-size:0.97rem;line-height:1.65;color:var(--text);margin-bottom:24px}
+.quiz-alternativas{display:flex;flex-direction:column;gap:10px}
+.quiz-alt{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;transition:all 0.18s;text-align:left;font-family:inherit;font-size:0.91rem;color:var(--text);line-height:1.5}
+.quiz-alt:hover:not(:disabled){border-color:#6C63FF;background:#6C63FF11}
+.quiz-alt .alt-letter{font-weight:700;min-width:22px;color:#A78BFA;font-size:0.95rem}
+.quiz-alt.correct{border-color:#4CAF50;background:#4CAF5018;color:var(--text)}
+.quiz-alt.wrong{border-color:#F44336;background:#F4433618;color:var(--text)}
+.quiz-alt.show-correct{border-color:#4CAF50;background:#4CAF5018}
+.quiz-alt:disabled{cursor:default}
+.quiz-feedback{margin-top:18px;padding:12px 16px;border-radius:10px;font-size:0.88rem;font-weight:600;display:none}
+.quiz-feedback.correct{background:#4CAF5022;color:#66BB6A;border:1px solid #4CAF5044;display:block}
+.quiz-feedback.wrong{background:#F4433622;color:#EF5350;border:1px solid #F4433644;display:block}
+.quiz-nav{display:flex;align-items:center;justify-content:space-between;margin-top:22px;gap:10px}
+.quiz-result{text-align:center;padding:40px 20px}
+.quiz-result-score{font-size:3rem;font-weight:800;color:#A78BFA;margin-bottom:8px}
+.quiz-result-label{font-size:1rem;color:var(--text2);margin-bottom:24px}
+.quiz-progress-bar{height:6px;background:var(--border);border-radius:99px;margin-bottom:22px;overflow:hidden}
+.quiz-progress-bar-fill{height:100%;background:linear-gradient(90deg,#6C63FF,#A78BFA);border-radius:99px;transition:width 0.4s}
+.quiz-filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:22px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+.quiz-select{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:0.83rem;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;transition:border-color 0.2s;flex:1 1 200px;min-width:160px}
+.quiz-select:focus{border-color:#6C63FF}
+.quiz-count{font-size:0.8rem;color:var(--text3);white-space:nowrap}
+.quiz-check{display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text2);cursor:pointer;white-space:nowrap}
+.quiz-coment{margin-top:12px;padding:12px 16px;border-radius:10px;font-size:0.82rem;line-height:1.6;color:var(--text2);background:var(--bg);border:1px solid var(--border)}
+.quiz-materia-tag{display:inline-block;background:#6C63FF22;color:#A78BFA;border-radius:99px;padding:2px 10px;font-size:0.7rem;font-weight:700;margin-bottom:6px}
+.quiz-filters-header{width:100%;font-family:'Outfit',sans-serif;font-size:0.9rem;font-weight:700;color:var(--text);margin-bottom:4px}
+.quiz-filters-stats{display:flex;flex-wrap:wrap;gap:6px;width:100%;margin-top:4px}
+.quiz-materia-chip{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:0.75rem;color:var(--text2);cursor:pointer;transition:all 0.2s}
+.quiz-materia-chip:hover,.quiz-materia-chip.active{border-color:#6C63FF;color:#A78BFA;background:#6C63FF11}
+.week-tabs-row{display:flex;align-items:center;gap:6px;margin-bottom:18px;flex-wrap:wrap;width:100%;min-width:0}
+.week-tab{font-family:'Outfit',sans-serif;font-size:0.78rem;font-weight:600;padding:6px 14px;border-radius:99px;border:1.5px solid var(--border);background:var(--card);color:var(--text2);cursor:pointer;transition:all 0.2s}
+.week-tab:hover{border-color:#6C63FF;color:var(--text)}
+.week-tab.active{background:#6C63FF;border-color:#6C63FF;color:#fff}
+.view-toggle{display:flex;gap:2px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:3px;margin-left:auto}
+.view-btn{font-family:'Outfit',sans-serif;font-size:0.75rem;font-weight:600;padding:5px 11px;border-radius:6px;border:none;cursor:pointer;background:transparent;color:var(--text2);transition:all 0.2s}
+.view-btn.active{background:#6C63FF;color:#fff}
+.toolbar{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;align-items:center;min-width:0;width:100%}
+.toolbar-filters{display:flex;gap:6px;flex-wrap:wrap;align-items:center;flex-shrink:0}
+.toolbar-add{margin-left:auto;flex-shrink:0}
+.search-input{flex:1 1 180px;min-width:160px;max-width:320px;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 13px;font-size:0.83rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s}
+.search-input:focus{border-color:#6C63FF}
+.search-input::placeholder{color:var(--text3)}
+.btn{font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:600;padding:8px 15px;border-radius:8px;border:none;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-primary{background:#6C63FF;color:#fff}
+.btn-primary:hover{background:#7B74FF;transform:translateY(-1px)}
+.btn-danger{background:#FF5252;color:#fff}
+.btn-danger:hover{background:#FF6B6B}
+.btn-secondary{background:var(--card);color:var(--text2);border:1px solid var(--border)}
+.btn-secondary:hover{color:var(--text);border-color:#6C63FF}
+.btn-icon{background:none;border:none;cursor:pointer;padding:3px 5px;border-radius:5px;color:var(--text3);font-size:0.8rem;transition:all 0.2s;line-height:1}
+.btn-icon:hover{background:var(--border);color:var(--text)}
+.btn-icon.delete:hover{background:rgba(255,82,82,0.15);color:#FF5252}
+.days-grid{display:grid;grid-template-columns:repeat(var(--days-cols,7),minmax(0,1fr));gap:10px;width:100%}
+@media(max-width:1400px){.days-grid{--days-cols:4}}
+@media(max-width:900px){.days-grid{--days-cols:2}}
+@media(max-width:480px){.days-grid{--days-cols:1}}
+.day-col{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;min-height:260px;display:flex;flex-direction:column;transition:border-color 0.2s,background 0.2s}
+.day-col.drag-over{border-color:#6C63FF;background:rgba(108,99,255,0.07)}
+.day-header{font-family:'Outfit',sans-serif;font-size:0.75rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+.day-topics{display:flex;flex-direction:column;gap:7px;flex:1;min-height:40px}
+.kanban-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;width:100%}
+@media(max-width:1100px){.kanban-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.kanban-grid{grid-template-columns:1fr}}
+.kanban-col{border-radius:var(--radius);padding:12px;min-height:280px;display:flex;flex-direction:column;border:1.5px solid;transition:box-shadow 0.2s}
+.kanban-col[data-status="proximo"]{background:var(--proximo-bg);border-color:var(--proximo-border)}
+.kanban-col[data-status="iniciado"]{background:var(--iniciado-bg);border-color:var(--iniciado-border)}
+.kanban-col[data-status="revisar"]{background:var(--revisar-bg);border-color:var(--revisar-border)}
+.kanban-col[data-status="finalizado"]{background:var(--finalizado-bg);border-color:var(--finalizado-border)}
+.kanban-col.drag-over{box-shadow:0 0 0 2px #6C63FF inset}
+.kanban-header{font-family:'Outfit',sans-serif;font-size:0.82rem;font-weight:700;margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;align-items:center}
+.kanban-count{background:rgba(255,255,255,0.1);border-radius:99px;padding:1px 7px;font-size:0.7rem}
+.kanban-topics{display:flex;flex-direction:column;gap:7px;flex:1;min-height:40px}
+.topic-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 11px;cursor:grab;transition:all 0.18s;display:flex;flex-direction:column;gap:5px;user-select:none}
+.topic-card:hover{border-color:#6C63FF;box-shadow:0 2px 10px rgba(108,99,255,0.18);transform:translateY(-1px)}
+.topic-card.dragging{opacity:0.45;cursor:grabbing;transform:scale(0.98)}
+.topic-card-header{display:flex;align-items:flex-start;gap:5px;flex-wrap:wrap}
+.tag{font-family:'Outfit',sans-serif;font-size:0.59rem;font-weight:700;padding:2px 6px;border-radius:99px;letter-spacing:0.4px;white-space:nowrap;border:1px solid transparent;flex-shrink:0}
+.tag-subj{color:#fff;border-color:transparent}
+.tag-imp-alta{background:rgba(255,82,82,0.12);color:#FF7070;border-color:rgba(255,82,82,0.25)}
+.tag-imp-media{background:rgba(255,179,0,0.12);color:#FFB300;border-color:rgba(255,179,0,0.25)}
+.tag-imp-baixa{background:rgba(102,187,106,0.12);color:#66BB6A;border-color:rgba(102,187,106,0.25)}
+.topic-hier{font-size:0.62rem;color:var(--text3);font-family:'Outfit',sans-serif;font-weight:500}
+.topic-nome{font-size:0.8rem;color:var(--text);line-height:1.35;word-break:break-word}
+.topic-nome.truncate{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.topic-sched{font-size:0.62rem;color:var(--text3);font-family:'Outfit',sans-serif;margin-top:1px}
+.topic-footer{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:1px}
+.method-select{font-size:0.7rem;background:var(--card);border:1px solid var(--border);color:var(--text2);border-radius:5px;padding:3px 5px;cursor:pointer;outline:none;flex:1;min-width:70px;font-family:'DM Sans',sans-serif;transition:border-color 0.2s}
+.method-select:hover,.method-select:focus{border-color:#6C63FF}
+.card-actions{display:flex;gap:1px;flex-shrink:0}
+.status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.status-proximo{background:#5A607A}
+.status-iniciado{background:#42A5F5}
+.status-revisar{background:#FFA726}
+.status-finalizado{background:#66BB6A}
+.materias-list{display:flex;flex-direction:column;gap:10px}
+.materia-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.materia-header{display:flex;align-items:center;gap:14px;padding:14px 18px;cursor:pointer;transition:background 0.2s;user-select:none}
+.materia-header:hover{background:rgba(255,255,255,0.025)}
+.materia-color-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.materia-info{flex:1}
+.materia-name{font-family:'Outfit',sans-serif;font-size:0.92rem;font-weight:600}
+.materia-meta{font-size:0.75rem;color:var(--text2);margin-top:2px}
+.materia-progress{display:flex;flex-direction:column;gap:3px;min-width:110px}
+.materia-progress-label{font-size:0.7rem;color:var(--text2);display:flex;justify-content:space-between}
+.materia-chevron{color:var(--text3);transition:transform 0.2s;font-size:0.8rem;flex-shrink:0}
+.materia-chevron.open{transform:rotate(180deg)}
+.materia-topics-list{display:none;flex-direction:column;border-top:1px solid var(--border);padding:10px 18px 14px;gap:3px}
+.materia-topics-list.open{display:flex}
+.materia-topic-row{display:flex;align-items:center;gap:9px;padding:5px 8px;border-radius:6px;transition:background 0.15s}
+.materia-topic-row:hover{background:rgba(255,255,255,0.025)}
+.materia-topic-hier{font-size:0.65rem;color:var(--text3);font-family:'Outfit',sans-serif;min-width:56px}
+.materia-topic-name{font-size:0.8rem;color:var(--text);flex:1}
+.materia-topic-imp{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.materia-topic-status{font-size:0.65rem;color:var(--text3);flex-shrink:0}
+.level-1{padding-left:0}
+.level-2{padding-left:18px}
+.level-3{padding-left:36px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:26px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;text-align:center}
+.stat-num{font-family:'Outfit',sans-serif;font-size:2rem;font-weight:800;color:#A78BFA;line-height:1}
+.stat-label{font-size:0.77rem;color:var(--text2);margin-top:5px}
+.stats-section{margin-bottom:26px}
+.stats-section-title{font-family:'Outfit',sans-serif;font-size:0.97rem;font-weight:700;margin-bottom:14px;color:var(--text)}
+.subject-progress-list{display:flex;flex-direction:column;gap:8px}
+.subject-prog-row{display:flex;align-items:center;gap:12px;padding:9px 13px;background:var(--card);border:1px solid var(--border);border-radius:8px}
+.subj-prog-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.subj-prog-name{font-size:0.8rem;flex:1;min-width:100px}
+.subj-prog-bar-wrap{flex:2;background:var(--border);border-radius:99px;height:7px;overflow:hidden;min-width:60px}
+.subj-prog-bar{height:100%;border-radius:99px;transition:width 0.5s ease}
+.subj-prog-pct{font-size:0.75rem;color:var(--text2);min-width:36px;text-align:right;font-family:'Outfit',sans-serif}
+.week-table{width:100%;border-collapse:collapse}
+.week-table th,.week-table td{padding:9px 13px;text-align:left;border-bottom:1px solid var(--border);font-size:0.8rem}
+.week-table th{color:var(--text2);font-weight:600;font-family:'Outfit',sans-serif;background:var(--card)}
+.week-table tr:last-child td{border-bottom:none}
+.week-table tr:hover td{background:rgba(255,255,255,0.018)}
+.method-breakdown{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.method-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center}
+.method-icon{font-size:1.6rem;margin-bottom:7px}
+.method-count{font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:700;color:#A78BFA}
+.method-name{font-size:0.72rem;color:var(--text2);margin-top:3px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(5px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:470px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow)}
+.modal-header{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--card);z-index:1}
+.modal-title{font-family:'Outfit',sans-serif;font-size:1.05rem;font-weight:700}
+.modal-close{background:none;border:none;color:var(--text3);font-size:1.2rem;cursor:pointer;line-height:1;padding:4px}
+.modal-close:hover{color:var(--text)}
+.modal-body{padding:18px 22px}
+.modal-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+.form-group{margin-bottom:14px}
+.form-label{font-size:0.77rem;color:var(--text2);margin-bottom:5px;display:block;font-weight:500}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:8px 11px;font-size:0.83rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:#6C63FF}
+.form-textarea{resize:vertical;min-height:72px}
+.confirm-text{font-size:0.88rem;color:var(--text2);line-height:1.55}
+.empty-state{text-align:center;padding:28px 16px;color:var(--text3);display:flex;flex-direction:column;align-items:center;gap:6px}
+.empty-icon{font-size:1.8rem}
+.empty-text{font-size:0.78rem}
+.toast-container{position:fixed;bottom:22px;right:22px;z-index:2000;display:flex;flex-direction:column;gap:7px}
+.toast{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 15px;font-size:0.8rem;color:var(--text);box-shadow:var(--shadow);animation:slideIn 0.28s ease;max-width:260px}
+.toast.success{border-color:#2D7A4A;background:rgba(26,58,42,0.97)}
+.toast.error{border-color:#7A2D2D;background:rgba(58,26,26,0.97)}
+@keyframes slideIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(110%);opacity:0}}
+.toast.out{animation:slideOut 0.28s ease forwards}
+.page-title{font-family:'Outfit',sans-serif;font-size:1.35rem;font-weight:700;margin-bottom:18px}
+@media(max-width:768px){.header{padding:10px 14px}.header-title{font-size:1rem}.countdown-num{font-size:1.1rem}.tab-content{padding:14px}.main-tab{padding:11px 12px;font-size:0.78rem}.week-tab{padding:5px 10px;font-size:0.73rem}}
+/* Exam selection overlay */
+.exam-overlay{position:fixed;inset:0;background:#0F1117;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;padding:24px}
+.exam-overlay-title{font-family:'Outfit',sans-serif;font-size:1.6rem;font-weight:800;background:linear-gradient(135deg,#8B83FF,#A78BFA,#EC4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center}
+.exam-overlay-sub{font-size:0.9rem;color:#9AA0B8;text-align:center}
+.exam-cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:900px}
+.exam-card{background:#1A1D27;border:2px solid #2A2D3E;border-radius:16px;padding:24px;width:260px;cursor:pointer;transition:all 0.2s;text-align:center}
+.exam-card:hover,.exam-card.selected{border-color:#6C63FF;box-shadow:0 0 0 2px #6C63FF44}
+.exam-card-name{font-family:'Outfit',sans-serif;font-size:1.15rem;font-weight:700;color:#E8EAF0;margin-bottom:8px}
+.exam-card-dates{font-size:0.8rem;color:#9AA0B8;line-height:1.8;text-align:left}
+.exam-card-countdown{font-family:'Outfit',sans-serif;font-size:2rem;font-weight:800;color:#A78BFA;margin:12px 0}
+.exam-card-countdown-lbl{font-size:0.7rem;color:#9AA0B8;margin-top:-8px;margin-bottom:8px}
+.exam-card-btn{font-family:'Outfit',sans-serif;font-size:0.85rem;font-weight:600;padding:8px 18px;background:#6C63FF;color:#fff;border:none;border-radius:8px;cursor:pointer;width:100%;margin-top:8px;transition:background 0.2s}
+.exam-card-btn:hover{background:#7B74FF}
+.topic-card.is-studied{border-left:3px solid #4CAF50}
+.topic-card.needs-review{border-left:3px solid #FF9800}
+.topic-card.is-studied.needs-review{border-left:3px solid #FF9800}
+.diff-badge{font-family:'Outfit',sans-serif;font-size:0.7rem;font-weight:700;padding:2px 7px;border-radius:99px}
+.diff-easy{background:#1B5E2022;color:#66BB6A;border:1px solid #66BB6A44}
+.diff-medium{background:#F57F1722;color:#FFB300;border:1px solid #FFB30044}
+.diff-hard{background:#B71C1C22;color:#FF5252;border:1px solid #FF525244}
+.filter-btn{font-family:'Outfit',sans-serif;font-size:0.78rem;font-weight:600;padding:6px 13px;border-radius:99px;border:1.5px solid var(--border);background:var(--card);color:var(--text2);cursor:pointer;transition:all 0.2s}
+.filter-btn.active{border-color:#6C63FF;color:#fff;background:#6C63FF}
+.filter-btn.orange.active{border-color:#FF9800;color:#fff;background:#FF9800}
+#filter-imp-alta.active{border-color:#FF5252;color:#fff;background:#C62828}
+#filter-imp-media.active{border-color:#FFB300;color:#fff;background:#E65100}
+#filter-imp-baixa.active{border-color:#66BB6A;color:#fff;background:#2E7D32}
+.day-col.today-col{border-color:#6C63FF;background:rgba(108,99,255,0.05)}
+.day-col.today-col .day-header{color:#A78BFA}
+.day-col.not-today{opacity:0.35;pointer-events:none}
+.today-banner{background:rgba(108,99,255,0.1);border:1px solid #6C63FF44;border-radius:8px;padding:8px 14px;font-size:0.83rem;color:#A78BFA;margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.diff-rating{display:flex;gap:5px;flex-wrap:wrap;margin:12px 0}
+.diff-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);color:var(--text2);font-family:'Outfit',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer;transition:all 0.15s}
+.diff-btn.sel-easy{background:#1B5E20;border-color:#4CAF50;color:#fff}
+.diff-btn.sel-medium{background:#E65100;border-color:#FF9800;color:#fff}
+.diff-btn.sel-hard{background:#B71C1C;border-color:#FF5252;color:#fff}
+.diff-btn:hover{border-color:#6C63FF}
+.topic-studied-meta{font-size:0.68rem;color:#4CAF50;margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.topic-review-meta{font-size:0.68rem;color:#FF9800}
+.btn-studied{font-family:'Outfit',sans-serif;font-size:0.68rem;font-weight:600;padding:3px 7px;border-radius:5px;border:1.5px solid #4CAF5066;background:transparent;color:#4CAF50;cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.btn-studied.studied{background:#1B5E20;border-color:#4CAF50;color:#fff}
+.btn-studied:hover{border-color:#4CAF50}
+.btn-revisao{font-family:'Outfit',sans-serif;font-size:0.68rem;font-weight:600;padding:3px 7px;border-radius:5px;border:1.5px solid #FF980066;background:transparent;color:#FF9800;cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.btn-revisao.active{background:#E65100;border-color:#FF9800;color:#fff}
+.btn-revisao:hover{border-color:#FF9800}
+.btn-trocar-exame{font-family:'Outfit',sans-serif;font-size:0.72rem;font-weight:600;padding:5px 11px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--text2);cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.btn-trocar-exame:hover{border-color:#6C63FF;color:var(--text)}
+.hard-topics-list{display:flex;flex-direction:column;gap:6px}
+.hard-topic-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px}
+.hard-topic-name{flex:1;font-size:0.8rem;color:var(--text)}
+.hard-topic-diff{font-family:'Outfit',sans-serif;font-size:0.85rem;font-weight:700}
+@media(max-width:768px){.header{padding:10px 14px}.header-title{font-size:1rem}.countdown-num{font-size:1.1rem}.tab-content{padding:14px}.main-tab{padding:11px 12px;font-size:0.78rem}.week-tab{padding:5px 10px;font-size:0.73rem}}
+
+/* === STUDY PROFILE === */
+.btn-profile{font-family:'Outfit',sans-serif;font-size:0.72rem;font-weight:600;padding:5px 11px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--text2);cursor:pointer;transition:all 0.2s}
+.btn-profile:hover{border-color:#A78BFA;color:var(--text)}
+.profile-section{margin-bottom:18px}
+.profile-days-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:8px}
+.profile-day-btn{padding:6px 4px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);color:var(--text2);font-size:0.7rem;font-family:'Outfit',sans-serif;font-weight:600;cursor:pointer;text-align:center;transition:all 0.2s}
+.profile-day-btn.active{border-color:#6C63FF;background:rgba(108,99,255,0.18);color:#A78BFA}
+.profile-hours-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.profile-hour-row{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:0.8rem;color:var(--text2)}
+.profile-hour-input{width:50px;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:3px 6px;font-size:0.82rem;text-align:center}
+/* === TOPIC DETAIL MODAL === */
+.modal-wide{max-width:640px}
+.td-topic-header{margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.td-topic-name{font-family:'Outfit',sans-serif;font-size:1.05rem;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:6px}
+.td-topic-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.td-next-review{font-size:0.73rem;color:var(--text3);margin-top:6px}
+.td-next-review span{color:#A78BFA;font-weight:600}
+.td-section{margin-bottom:16px}
+.td-section-title{font-size:0.73rem;font-weight:700;color:#A78BFA;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.study-methods-grid{display:flex;flex-direction:column;gap:8px}
+.study-method-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:var(--bg);border:1px solid var(--border);cursor:pointer;transition:all 0.2s}
+.study-method-row:hover{border-color:#6C63FF}
+.study-method-row.done{background:rgba(76,175,80,0.08);border-color:#4CAF5044}
+.study-method-row input[type=checkbox]{cursor:pointer;width:15px;height:15px;flex-shrink:0}
+.study-method-label{font-size:0.83rem;color:var(--text);flex:1}
+.quest-fields{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;padding-left:25px}
+.quest-field{display:flex;align-items:center;gap:5px;font-size:0.75rem;color:var(--text2)}
+.quest-input{width:58px;padding:4px 6px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.82rem;text-align:center}
+.quest-input:focus{border-color:#6C63FF;outline:none}
+.quest-accuracy{font-size:0.73rem;padding:2px 8px;border-radius:99px;font-weight:600;font-family:'Outfit',sans-serif}
+.acc-good{background:rgba(76,175,80,0.12);color:#66BB6A}
+.acc-ok{background:rgba(255,179,0,0.12);color:#FFB300}
+.acc-bad{background:rgba(255,82,82,0.12);color:#FF5252}
+.checklist-container{max-height:200px;overflow-y:auto;margin-top:6px;border:1px solid var(--border);border-radius:8px;background:var(--bg)}
+.checklist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:2px;padding:6px}
+.checklist-art-item{display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:5px;cursor:pointer;font-size:0.72rem;color:var(--text2);transition:background 0.15s}
+.checklist-art-item:hover{background:rgba(108,99,255,0.12)}
+.checklist-art-item.checked{background:rgba(76,175,80,0.12);color:#66BB6A}
+.checklist-art-item input[type=checkbox]{cursor:pointer;width:12px;height:12px}
+.checklist-concepts{display:flex;flex-direction:column;gap:4px;padding:6px}
+.checklist-concept-item{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:0.8rem;color:var(--text2);transition:background 0.15s}
+.checklist-concept-item:hover{background:rgba(108,99,255,0.12)}
+.checklist-concept-item.checked{background:rgba(76,175,80,0.1);color:#66BB6A}
+.checklist-concept-item input[type=checkbox]{cursor:pointer;width:13px;height:13px}
+.checklist-progress{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.checklist-prog-bar{flex:1;height:5px;background:var(--border);border-radius:99px;overflow:hidden}
+.checklist-prog-fill{height:100%;background:linear-gradient(90deg,#4CAF50,#81C784);border-radius:99px;transition:width 0.3s}
+.checklist-prog-lbl{font-size:0.7rem;color:var(--text3);white-space:nowrap}
+.td-difficulty{display:flex;gap:4px;flex-wrap:wrap}
+.status-selector{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.status-sel-btn{padding:6px 4px;border-radius:7px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:0.7rem;font-family:'Outfit',sans-serif;font-weight:600;cursor:pointer;text-align:center;transition:all 0.2s}
+.status-sel-btn.active-proximo{border-color:#5A607A;background:#2A2D3E;color:var(--text)}
+.status-sel-btn.active-iniciado{border-color:#42A5F5;background:rgba(66,165,245,0.1);color:#42A5F5}
+.status-sel-btn.active-revisar{border-color:#FFA726;background:rgba(255,167,38,0.1);color:#FFA726}
+.status-sel-btn.active-finalizado{border-color:#66BB6A;background:rgba(102,187,106,0.1);color:#66BB6A}
+.kanban-smart-badge{font-size:0.6rem;padding:1px 6px;border-radius:99px;background:rgba(255,167,38,0.18);color:#FFA726;margin-left:4px}
+.acc-row{display:flex;align-items:center;gap:10px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:7px;font-size:0.78rem}
+.acc-row-name{flex:1;color:var(--text2)}
+.acc-row-val{font-family:'Outfit',sans-serif;font-weight:700}
+
+
+/* ── Login / Auth ── */
+.auth-overlay{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
+.auth-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:36px 32px;width:100%;max-width:400px;box-shadow:var(--shadow)}
+.auth-logo{font-family:'Outfit',sans-serif;font-size:1.6rem;font-weight:800;background:linear-gradient(135deg,#8B83FF,#A78BFA,#EC4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center;margin-bottom:6px}
+.auth-sub{text-align:center;font-size:0.82rem;color:var(--text3);margin-bottom:28px}
+.auth-tabs{display:flex;gap:0;background:var(--bg);border-radius:8px;padding:3px;margin-bottom:24px}
+.auth-tab{flex:1;text-align:center;padding:7px;border-radius:6px;cursor:pointer;font-size:0.82rem;font-weight:600;color:var(--text2);transition:all 0.2s;border:none;background:none;font-family:'Outfit',sans-serif}
+.auth-tab.active{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.3)}
+.auth-form-group{margin-bottom:14px}
+.auth-label{display:block;font-size:0.78rem;color:var(--text2);margin-bottom:5px;font-weight:500}
+.auth-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 13px;font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s}
+.auth-input:focus{border-color:#6C63FF}
+.auth-btn{width:100%;background:linear-gradient(135deg,#6C63FF,#A78BFA);color:#fff;border:none;border-radius:8px;padding:11px;font-size:0.9rem;font-weight:700;font-family:'Outfit',sans-serif;cursor:pointer;margin-top:6px;transition:opacity 0.2s}
+.auth-btn:hover{opacity:0.9}
+.auth-btn:disabled{opacity:0.5;cursor:default}
+.auth-error{color:#EF5350;font-size:0.8rem;text-align:center;margin-top:8px;min-height:18px}
+.auth-success{color:#66BB6A;font-size:0.8rem;text-align:center;margin-top:8px}
+.auth-config{margin-top:16px;padding:12px;background:var(--bg);border-radius:8px;border:1px solid var(--border)}
+.auth-config summary{font-size:0.78rem;color:var(--text3);cursor:pointer}
+.auth-config input{width:100%;margin-top:6px;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 10px;font-size:0.75rem;font-family:monospace;outline:none}
+/* ── User bar ── */
+.user-bar{display:flex;align-items:center;gap:10px;margin-left:10px}
+.user-email{font-size:0.78rem;color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-logout{font-size:0.73rem;padding:4px 10px;background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.2s}
+.btn-logout:hover{border-color:#EF5350;color:#EF5350}
+/* ── Spaced Repetition ── */
+.sr-badge{font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:99px;margin-left:6px}
+.sr-badge.due{background:#FF525222;color:#FF7070;border:1px solid #FF525244}
+.sr-badge.new{background:#6C63FF22;color:#A78BFA;border:1px solid #6C63FF44}
+.sr-badge.known{background:#4CAF5022;color:#66BB6A;border:1px solid #4CAF5044}
+.sr-info{font-size:0.75rem;color:var(--text3);margin-top:4px;text-align:right}
+.quiz-wrong-queue{background:#FF525211;border:1px solid #FF525233;border-radius:8px;padding:8px 14px;font-size:0.8rem;color:#FF7070;margin-bottom:12px;display:none}
+
+</style>
+</head>
+<body>
+
+<!-- ═══ AUTH OVERLAY ═══ -->
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-logo">TJ — Planner</div>
+    <div class="auth-sub">Analista e Técnico · Acesse sua conta</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login-btn" onclick="switchAuthTab('login')">Entrar</button>
+      <button class="auth-tab" id="tab-signup-btn" onclick="switchAuthTab('signup')">Criar conta</button>
+    </div>
+    <div id="auth-login-form">
+      <div class="auth-form-group">
+        <label class="auth-label">E-mail</label>
+        <input type="email" class="auth-input" id="auth-email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="auth-form-group">
+        <label class="auth-label">Senha</label>
+        <input type="password" class="auth-input" id="auth-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="auth-btn" id="auth-login-btn" onclick="doLogin()">Entrar</button>
+      <div class="auth-error" id="auth-error"></div>
+    </div>
+    <div id="auth-signup-form" style="display:none">
+      <div class="auth-form-group">
+        <label class="auth-label">E-mail</label>
+        <input type="email" class="auth-input" id="auth-signup-email" placeholder="seu@email.com">
+      </div>
+      <div class="auth-form-group">
+        <label class="auth-label">Senha (mínimo 6 caracteres)</label>
+        <input type="password" class="auth-input" id="auth-signup-pass" placeholder="••••••••">
+      </div>
+      <button class="auth-btn" id="auth-signup-btn" onclick="doSignup()">Criar conta</button>
+      <div class="auth-error" id="auth-signup-error"></div>
+    </div>
+  </div>
+</div>
+
+
+<div id="exam-overlay" class="exam-overlay" style="display:none">
+  <div class="exam-overlay-title">TJ — Planner de Aprovação</div>
+  <div class="exam-overlay-sub">Selecione o concurso para o qual deseja se preparar</div>
+  <div class="exam-cards" id="exam-cards-container"></div>
+</div>
+
+<header class="header">
+  <div class="header-title">TJ — Planner</div>
+  <div class="header-right">
+    <button class="btn-profile" id="btn-profile" onclick="openProfileModal()">👤 Perfil de Estudos</button>
+    <button class="btn-trocar-exame" id="btn-trocar-exame">⚙️ Trocar Concurso</button>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+      <div style="font-family:'Outfit',sans-serif;font-size:0.65rem;color:#6B7194;text-transform:uppercase;letter-spacing:1px" id="countdown-label">Prova Objetiva · TJ</div>
+      <div class="countdown">
+        <div class="countdown-unit"><div class="countdown-num" id="cd-days">---</div><div class="countdown-lbl">dias</div></div>
+        <div class="countdown-sep">:</div>
+        <div class="countdown-unit"><div class="countdown-num" id="cd-hours">--</div><div class="countdown-lbl">horas</div></div>
+        <div class="countdown-sep">:</div>
+        <div class="countdown-unit"><div class="countdown-num" id="cd-mins">--</div><div class="countdown-lbl">min</div></div>
+        <div class="countdown-sep">:</div>
+        <div class="countdown-unit"><div class="countdown-num" id="cd-secs">--</div><div class="countdown-lbl">seg</div></div>
+      </div>
+    </div>
+    <div class="overall-progress">
+      <div class="overall-progress-label">
+        <span>Progresso Geral</span>
+        <span id="overall-pct">0%</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="overall-bar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="main-nav">
+  <button class="main-tab active" onclick="switchMainTab('planejamento')">📅 Planejamento</button>
+  <button class="main-tab" onclick="switchMainTab('materias')">📚 Matérias</button>
+  <button class="main-tab" onclick="switchMainTab('estatisticas')">📊 Estatísticas</button>
+  <button class="main-tab" onclick="switchMainTab('questoes')">📝 Questões</button>
+</nav>
+
+<div class="tab-content active" id="tab-planejamento">
+  <div class="week-tabs-row">
+    <div id="week-tabs-container" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"></div>
+    <div class="view-toggle">
+      <button class="view-btn active" id="view-dias" onclick="switchView('dias')">Dias da Semana</button>
+      <button class="view-btn" id="view-kanban" onclick="switchView('kanban')">Kanban</button>
+    </div>
+  </div>
+  <div class="toolbar">
+    <input type="text" class="search-input" id="search-input" placeholder="🔍 Buscar tópico..." oninput="renderCurrentView()">
+    <div class="toolbar-filters">
+      <button class="filter-btn" id="filter-hoje-btn">📅 Hoje</button>
+      <button class="filter-btn orange" id="filter-revisao-btn">🔄 Revisões</button>
+      <button class="filter-btn" id="filter-imp-alta" style="border-color:#FF525244;color:#FF7070">🔴 Alta</button>
+      <button class="filter-btn" id="filter-imp-media" style="border-color:#FFB30044;color:#FFB300">🟡 Média</button>
+      <button class="filter-btn" id="filter-imp-baixa" style="border-color:#66BB6A44;color:#66BB6A">🟢 Baixa</button>
+    </div>
+    <div class="toolbar-add">
+      <button class="btn btn-primary" onclick="openAddModal()">+ Adicionar Tópico</button>
+    </div>
+  </div>
+  <div id="plan-view-container"></div>
+</div>
+
+<div class="tab-content" id="tab-materias">
+  <div class="page-title">📚 Matérias</div>
+  <div class="materias-list" id="materias-list"></div>
+</div>
+
+<div class="tab-content" id="tab-estatisticas">
+  <div class="page-title">📊 Estatísticas</div>
+  <div class="stats-grid" id="stats-grid"></div>
+  <div class="stats-section">
+    <div class="stats-section-title">Progresso por Matéria</div>
+    <div class="subject-progress-list" id="subject-progress-list"></div>
+  </div>
+  <div class="stats-section">
+    <div class="stats-section-title">Progresso por Semana</div>
+    <table class="week-table">
+      <thead><tr><th>Semana</th><th>Total</th><th>Finalizados</th><th>%</th><th>Progresso</th></tr></thead>
+      <tbody id="week-table-body"></tbody>
+    </table>
+  </div>
+  <div class="stats-section">
+    <div class="stats-section-title">Método de Estudo</div>
+    <div class="method-breakdown" id="method-breakdown"></div>
+  </div>
+  <div class="stats-section" id="accuracy-section">
+    <div class="stats-section-title">🎯 Taxa de Acerto por Matéria</div>
+    <div id="accuracy-list" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+  <div class="stats-grid" id="checklist-stats" style="margin-bottom:18px"></div>
+  <div class="stats-section" id="hard-topics-section" style="display:none">
+    <div class="stats-section-title">🔥 Tópicos Difíceis (Dificuldade ≥ 7)</div>
+    <div class="hard-topics-list" id="hard-topics-list"></div>
+  </div>
+</div>
+
+<div class="tab-content" id="tab-questoes">
+  <div class="page-title">📝 Questões</div>
+  <div class="quiz-container" style="max-width:780px;margin:0 auto">
+    <div class="quiz-filters" id="quiz-filters">
+      <div class="quiz-filters-header">Filtrar questões</div>
+      <select class="quiz-select" id="quiz-materia-sel" onchange="onMateriaChange()">
+        <option value="">📚 Todas as matérias</option>
+      </select>
+      <select class="quiz-select" id="quiz-tema-sel" onchange="updateQuizCount()">
+        <option value="">📂 Todos os temas</option>
+      </select>
+      <select class="quiz-select" id="quiz-origem-sel" onchange="updateQuizCount()">
+        <option value="">📋 Todos os concursos</option>
+      </select>
+      <label class="quiz-check"><input type="checkbox" id="quiz-random"> 🔀 Aleatório</label>
+      <span class="quiz-count" id="quiz-count">carregando...</span>
+      <button class="btn btn-primary" onclick="startQuiz()">▶ Iniciar Quiz</button>
+    </div>
+    <div class="quiz-wrong-queue" id="sr-notice"></div>
+    <div id="quiz-container"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Editar Tópico</div>
+      <button class="modal-close" onclick="closeModal('edit-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-topic-id">
+      <div class="form-group"><label class="form-label">Nome do Tópico</label><input type="text" class="form-input" id="edit-nome"></div>
+      <div class="form-group"><label class="form-label">Importância</label>
+        <select class="form-select" id="edit-importancia">
+          <option value="alta">🔴 Alta</option>
+          <option value="media">🟡 Média</option>
+          <option value="baixa">🟢 Baixa</option>
+        </select></div>
+      <div class="form-group"><label class="form-label">Método de Estudo</label>
+        <select class="form-select" id="edit-method">
+          <option value="video">📹 Vídeo</option>
+          <option value="questoes">❓ Questões</option>
+          <option value="leitura">📖 Leitura</option>
+        </select></div>
+      <div class="form-group"><label class="form-label">Status</label>
+        <select class="form-select" id="edit-status">
+          <option value="proximo">🔜 Próximo</option>
+          <option value="iniciado">⚡ Iniciado</option>
+          <option value="revisar">🔄 Revisar</option>
+          <option value="finalizado">✅ Finalizado</option>
+        </select></div>
+      <div class="form-group"><label class="form-label">Dia da Semana</label>
+        <select class="form-select" id="edit-dia">
+          <option value="segunda">Segunda</option><option value="terca">Terça</option>
+          <option value="quarta">Quarta</option><option value="quinta">Quinta</option>
+          <option value="sexta">Sexta</option><option value="sabado">Sábado</option>
+          <option value="domingo">Domingo</option>
+        </select></div>
+      <div class="form-group"><label class="form-label">Semana</label>
+        <select class="form-select" id="edit-semana"></select></div>
+      <div class="form-group"><label class="form-label">Anotações</label>
+        <textarea class="form-textarea" id="edit-notes" placeholder="Suas anotações sobre este tópico..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('edit-modal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEdit()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">+ Adicionar Tópico</div>
+      <button class="modal-close" onclick="closeModal('add-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Matéria</label><select class="form-select" id="add-materia"></select></div>
+      <div class="form-group"><label class="form-label">Nome do Tópico</label><input type="text" class="form-input" id="add-nome" placeholder="Ex: Contratos de Consumo"></div>
+      <div class="form-group"><label class="form-label">Importância</label>
+        <select class="form-select" id="add-importancia">
+          <option value="alta">🔴 Alta</option>
+          <option value="media">🟡 Média</option>
+          <option value="baixa">🟢 Baixa</option>
+        </select></div>
+      <div class="form-group"><label class="form-label">Método de Estudo</label>
+        <select class="form-select" id="add-method">
+          <option value="video">📹 Vídeo</option>
+          <option value="questoes">❓ Questões</option>
+          <option value="leitura">📖 Leitura</option>
+        </select></div>
+      <div class="form-group"><label class="form-label">Semana</label>
+        <select class="form-select" id="add-semana"></select></div>
+      <div class="form-group"><label class="form-label">Dia da Semana</label>
+        <select class="form-select" id="add-dia">
+          <option value="segunda">Segunda</option><option value="terca">Terça</option>
+          <option value="quarta">Quarta</option><option value="quinta">Quinta</option>
+          <option value="sexta">Sexta</option><option value="sabado">Sábado</option>
+          <option value="domingo">Domingo</option>
+        </select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('add-modal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAdd()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header">
+      <div class="modal-title">🗑️ Excluir Tópico</div>
+      <button class="modal-close" onclick="closeModal('delete-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="confirm-text">Tem certeza que deseja excluir este tópico? Esta ação não pode ser desfeita.</p>
+      <p style="margin-top:10px;font-size:0.83rem;color:var(--text);font-weight:500" id="delete-topic-name"></p>
+      <input type="hidden" id="delete-topic-id">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('delete-modal')">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Confirmar Exclusão</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="studied-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title">Como foi este tópico?</div>
+      <button class="modal-close" onclick="closeModal('studied-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="studied-topic-id">
+      <div style="font-size:0.85rem;color:var(--text2);margin-bottom:14px;font-weight:500" id="studied-topic-name"></div>
+      <div class="form-group">
+        <label class="form-label">Dificuldade (0 = fácil, 10 = muito difícil)</label>
+        <div class="diff-rating" id="diff-rating-btns"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">📝 Anotações (opcional)</label>
+        <textarea class="form-textarea" id="studied-notes" placeholder="Anotações sobre este tópico..."></textarea>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.83rem;color:var(--text2)">
+          <input type="checkbox" id="studied-revisao" style="width:15px;height:15px;cursor:pointer">
+          🔄 Marcar para Revisão
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('studied-modal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveStudied()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal-overlay" id="profile-modal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-title">👤 Perfil de Estudos</div>
+      <button class="modal-close" onclick="closeModal('profile-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="profile-section">
+        <div class="form-label">📅 Dias de estudo na semana</div>
+        <div class="profile-days-grid" id="profile-days-grid">
+          <button class="profile-day-btn" data-day="segunda" onclick="toggleProfileDay('segunda')">Seg</button>
+          <button class="profile-day-btn" data-day="terca" onclick="toggleProfileDay('terca')">Ter</button>
+          <button class="profile-day-btn" data-day="quarta" onclick="toggleProfileDay('quarta')">Qua</button>
+          <button class="profile-day-btn" data-day="quinta" onclick="toggleProfileDay('quinta')">Qui</button>
+          <button class="profile-day-btn" data-day="sexta" onclick="toggleProfileDay('sexta')">Sex</button>
+          <button class="profile-day-btn" data-day="sabado" onclick="toggleProfileDay('sabado')">Sáb</button>
+          <button class="profile-day-btn" data-day="domingo" onclick="toggleProfileDay('domingo')">Dom</button>
+        </div>
+      </div>
+      <div class="profile-section">
+        <div class="form-label">⏱️ Horas de estudo por dia</div>
+        <div class="profile-hours-grid" id="profile-hours-grid"></div>
+      </div>
+      <div class="profile-section">
+        <div class="form-label">📌 Foco da semana</div>
+        <select class="form-select" id="profile-focus">
+          <option value="alta">🔴 Prioridade Alta (maior incidência primeiro)</option>
+          <option value="balanceado">⚖️ Balanceado (mix de todas importâncias)</option>
+          <option value="fraco">📈 Reforçar pontos fracos (menor taxa de acerto)</option>
+        </select>
+      </div>
+      <div style="font-size:0.75rem;color:var(--text3);margin-top:10px">
+        💡 O planner usa essas informações para distribuir os tópicos, calcular revisões espaçadas e mostrar o que estudar primeiro.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('profile-modal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProfileSettings()">Salvar Perfil</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal-overlay" id="topic-detail-modal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-title">📖 Detalhes do Tópico</div>
+      <button class="modal-close" onclick="closeTopicDetail()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:16px 20px;overflow-y:auto;max-height:75vh">
+      <input type="hidden" id="td-topic-id">
+      <div class="td-topic-header">
+        <div class="td-topic-name" id="td-topic-name"></div>
+        <div class="td-topic-meta" id="td-topic-meta"></div>
+        <div class="td-next-review" id="td-next-review"></div>
+      </div>
+
+      <div class="td-section">
+        <div class="td-section-title">📖 Formas de Estudo</div>
+        <div class="study-methods-grid">
+          <label class="study-method-row" id="td-video-row">
+            <input type="checkbox" id="td-video-ok">
+            <span class="study-method-label">📹 Vídeo assistido</span>
+          </label>
+          <label class="study-method-row" id="td-leiseca-row">
+            <input type="checkbox" id="td-leiseca-ok">
+            <span class="study-method-label">📔 Lei seca lida</span>
+          </label>
+          <div class="study-method-row" style="flex-direction:column;align-items:flex-start;cursor:default">
+            <div style="display:flex;align-items:center;gap:10px;width:100%">
+              <input type="checkbox" id="td-questoes-ok" style="cursor:pointer;width:15px;height:15px">
+              <span class="study-method-label">❓ Questões resolvidas</span>
+            </div>
+            <div class="quest-fields" id="td-quest-fields">
+              <div class="quest-field"><span>Feitas:</span><input type="number" class="quest-input" id="td-quest-feitas" min="0" value="0" oninput="updateAccuracy()"></div>
+              <div class="quest-field"><span>Acertou:</span><input type="number" class="quest-input" id="td-quest-acertou" min="0" value="0" oninput="updateAccuracy()"></div>
+              <div class="quest-field"><span>Errou:</span><input type="number" class="quest-input" id="td-quest-errou" min="0" value="0" oninput="updateAccuracy()"></div>
+              <span class="quest-accuracy" id="td-accuracy-badge"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="td-section" id="td-checklist-section" style="display:none">
+        <div class="td-section-title">📋 Checklist de Artigos/Pontos</div>
+        <div class="checklist-progress">
+          <div class="checklist-prog-bar"><div class="checklist-prog-fill" id="td-check-prog-fill" style="width:0%"></div></div>
+          <span class="checklist-prog-lbl" id="td-check-prog-lbl">0/0 marcados</span>
+        </div>
+        <div class="checklist-container" id="td-checklist-items"></div>
+      </div>
+
+      <div class="td-section" id="td-children-section" style="display:none">
+        <div class="td-section-title">📚 Subtópicos</div>
+        <div id="td-children-list" style="display:flex;flex-direction:column;gap:4px"></div>
+      </div>
+
+      <div class="td-section">
+        <div class="td-section-title">🎯 Dificuldade (0=fácil, 10=difícil)</div>
+        <div class="td-difficulty" id="td-diff-btns"></div>
+      </div>
+
+      <div class="td-section">
+        <div class="form-label">📝 Anotações</div>
+        <textarea class="form-textarea" id="td-notes" placeholder="Suas anotações, dúvidas, observações..."></textarea>
+      </div>
+
+      <div class="td-section">
+        <div class="td-section-title">📌 Status</div>
+        <div class="status-selector" id="td-status-selector">
+          <button class="status-sel-btn" data-status="proximo" onclick="selectTdStatus('proximo')">🔜 Próximo</button>
+          <button class="status-sel-btn" data-status="iniciado" onclick="selectTdStatus('iniciado')">⚡ Iniciado</button>
+          <button class="status-sel-btn" data-status="revisar" onclick="selectTdStatus('revisar')">🔄 Revisar</button>
+          <button class="status-sel-btn" data-status="finalizado" onclick="selectTdStatus('finalizado')">✅ Finalizado</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeTopicDetail()">Fechar (auto-salvar)</button>
+      <button class="btn btn-primary" onclick="saveTopicDetail()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+const MATERIAS_DATA = [
+  {"id":"portugues","nome":"Língua Portuguesa","cor":"#4FC3F7","questoes":20,"pontMax":20,"topicos":[
+    {"id":"tp001","hier":"01.01","nome":"Interpretação de Texto","nivel":1,"questHist":80,"importancia":"alta","semana":1,"dia":"segunda"},
+    {"id":"tp002","hier":"01.02","nome":"Tipologia e Gêneros Textuais","nivel":1,"questHist":40,"importancia":"alta","semana":1,"dia":"terca"},
+    {"id":"tp003","hier":"01.03","nome":"Ortografia e Acentuação","nivel":1,"questHist":50,"importancia":"alta","semana":2,"dia":"quarta"},
+    {"id":"tp004","hier":"01.04","nome":"Morfologia — Classes de Palavras","nivel":2,"questHist":55,"importancia":"alta","semana":2,"dia":"quinta"},
+    {"id":"tp005","hier":"01.05","nome":"Sintaxe da Oração e do Período","nivel":2,"questHist":65,"importancia":"alta","semana":3,"dia":"sexta"},
+    {"id":"tp006","hier":"01.06","nome":"Concordância Verbal e Nominal","nivel":2,"questHist":70,"importancia":"alta","semana":3,"dia":"sabado"},
+    {"id":"tp007","hier":"01.07","nome":"Regência Verbal e Nominal","nivel":2,"questHist":45,"importancia":"alta","semana":4,"dia":"domingo"},
+    {"id":"tp008","hier":"01.08","nome":"Crase","nivel":1,"questHist":35,"importancia":"media","semana":4,"dia":"segunda"},
+    {"id":"tp009","hier":"01.09","nome":"Pronomes — Emprego e Colocação","nivel":2,"questHist":42,"importancia":"media","semana":5,"dia":"terca"},
+    {"id":"tp010","hier":"01.10","nome":"Semântica — Sinônimos e Polissemia","nivel":1,"questHist":30,"importancia":"media","semana":5,"dia":"quarta"}
+  ]},
+  {"id":"raciocinio","nome":"Raciocínio Lógico","cor":"#FFD54F","questoes":15,"pontMax":15,"topicos":[
+    {"id":"tr001","hier":"02.01","nome":"Lógica Proposicional e Conectivos","nivel":2,"questHist":75,"importancia":"alta","semana":1,"dia":"quinta"},
+    {"id":"tr002","hier":"02.02","nome":"Tabela-Verdade e Equivalências","nivel":2,"questHist":60,"importancia":"alta","semana":2,"dia":"sexta"},
+    {"id":"tr003","hier":"02.03","nome":"Estruturas Lógicas — Silogismo","nivel":2,"questHist":50,"importancia":"alta","semana":3,"dia":"sabado"},
+    {"id":"tr004","hier":"02.04","nome":"Proporcionalidade e Porcentagem","nivel":1,"questHist":55,"importancia":"alta","semana":4,"dia":"domingo"},
+    {"id":"tr005","hier":"02.05","nome":"Sequências Numéricas e Padrões","nivel":2,"questHist":45,"importancia":"media","semana":5,"dia":"segunda"},
+    {"id":"tr006","hier":"02.06","nome":"Conjuntos — Operações e Problemas","nivel":2,"questHist":38,"importancia":"media","semana":6,"dia":"terca"},
+    {"id":"tr007","hier":"02.07","nome":"Probabilidade e Combinações","nivel":3,"questHist":30,"importancia":"baixa","semana":7,"dia":"quarta"}
+  ]},
+  {"id":"constitucional","nome":"Direito Constitucional","cor":"#81C784","questoes":20,"pontMax":20,"topicos":[
+    {"id":"tc001","hier":"03.01","nome":"Princípios Fundamentais da República","nivel":1,"questHist":80,"importancia":"alta","semana":1,"dia":"sexta"},
+    {"id":"tc002","hier":"03.02","nome":"Direitos e Garantias Fundamentais","nivel":2,"questHist":90,"importancia":"alta","semana":2,"dia":"sabado"},
+    {"id":"tc003","hier":"03.03","nome":"Direitos Sociais","nivel":2,"questHist":65,"importancia":"alta","semana":3,"dia":"domingo"},
+    {"id":"tc004","hier":"03.04","nome":"Organização do Estado","nivel":2,"questHist":55,"importancia":"alta","semana":4,"dia":"segunda"},
+    {"id":"tc005","hier":"03.05","nome":"Organização dos Poderes","nivel":2,"questHist":75,"importancia":"alta","semana":5,"dia":"terca"},
+    {"id":"tc006","hier":"03.06","nome":"Funções Essenciais à Justiça","nivel":2,"questHist":50,"importancia":"alta","semana":6,"dia":"quarta"},
+    {"id":"tc007","hier":"03.07","nome":"Controle de Constitucionalidade","nivel":3,"questHist":70,"importancia":"alta","semana":7,"dia":"quinta"},
+    {"id":"tc008","hier":"03.08","nome":"Ordem Econômica e Social","nivel":2,"questHist":35,"importancia":"media","semana":8,"dia":"sexta"},
+    {"id":"tc009","hier":"03.09","nome":"Tributação e Orçamento na CF","nivel":3,"questHist":30,"importancia":"media","semana":9,"dia":"sabado"}
+  ]},
+  {"id":"administrativo","nome":"Direito Administrativo","cor":"#FF8A65","questoes":20,"pontMax":20,"topicos":[
+    {"id":"ta001","hier":"04.01","nome":"Princípios da Administração Pública","nivel":1,"questHist":85,"importancia":"alta","semana":1,"dia":"domingo"},
+    {"id":"ta002","hier":"04.02","nome":"Ato Administrativo","nivel":2,"questHist":80,"importancia":"alta","semana":2,"dia":"segunda"},
+    {"id":"ta003","hier":"04.03","nome":"Poderes Administrativos","nivel":2,"questHist":60,"importancia":"alta","semana":3,"dia":"terca"},
+    {"id":"ta004","hier":"04.04","nome":"Organização da Administração","nivel":2,"questHist":55,"importancia":"alta","semana":4,"dia":"quarta"},
+    {"id":"ta005","hier":"04.05","nome":"Serviços Públicos","nivel":2,"questHist":50,"importancia":"alta","semana":5,"dia":"quinta"},
+    {"id":"ta006","hier":"04.06","nome":"Contratos Administrativos","nivel":2,"questHist":65,"importancia":"alta","semana":6,"dia":"sexta"},
+    {"id":"ta007","hier":"04.07","nome":"Licitações — Lei 14.133/2021","nivel":2,"questHist":75,"importancia":"alta","semana":7,"dia":"sabado"},
+    {"id":"ta008","hier":"04.08","nome":"Servidores Públicos","nivel":2,"questHist":70,"importancia":"alta","semana":8,"dia":"domingo"},
+    {"id":"ta009","hier":"04.09","nome":"Controle da Administração","nivel":3,"questHist":45,"importancia":"media","semana":9,"dia":"segunda"},
+    {"id":"ta010","hier":"04.10","nome":"Improbidade Administrativa — Lei 8.429/1992","nivel":2,"questHist":55,"importancia":"alta","semana":10,"dia":"terca"}
+  ]},
+  {"id":"civil","nome":"Direito Civil (Analista)","cor":"#CE93D8","questoes":15,"pontMax":15,"topicos":[
+    {"id":"tv001","hier":"05.01","nome":"Lei de Introdução — LINDB","nivel":1,"questHist":50,"importancia":"alta","semana":1,"dia":"quarta"},
+    {"id":"tv002","hier":"05.02","nome":"Pessoas Físicas e Jurídicas","nivel":1,"questHist":45,"importancia":"alta","semana":2,"dia":"quinta"},
+    {"id":"tv003","hier":"05.03","nome":"Negócio Jurídico — Vícios e Nulidades","nivel":2,"questHist":60,"importancia":"alta","semana":3,"dia":"sexta"},
+    {"id":"tv004","hier":"05.04","nome":"Obrigações — Teoria Geral","nivel":2,"questHist":55,"importancia":"alta","semana":4,"dia":"sabado"},
+    {"id":"tv005","hier":"05.05","nome":"Contratos em Espécie","nivel":2,"questHist":50,"importancia":"alta","semana":5,"dia":"domingo"},
+    {"id":"tv006","hier":"05.06","nome":"Responsabilidade Civil","nivel":2,"questHist":65,"importancia":"alta","semana":6,"dia":"segunda"},
+    {"id":"tv007","hier":"05.07","nome":"Direitos Reais — Posse e Propriedade","nivel":2,"questHist":45,"importancia":"media","semana":7,"dia":"terca"},
+    {"id":"tv008","hier":"05.08","nome":"Família e Sucessões","nivel":2,"questHist":40,"importancia":"media","semana":8,"dia":"quarta"}
+  ]},
+  {"id":"proc_civil","nome":"Direito Processual Civil (Analista)","cor":"#80DEEA","questoes":15,"pontMax":15,"topicos":[
+    {"id":"tpc001","hier":"06.01","nome":"Normas Fundamentais — CPC/2015","nivel":1,"questHist":55,"importancia":"alta","semana":1,"dia":"quinta"},
+    {"id":"tpc002","hier":"06.02","nome":"Competência e Partes","nivel":2,"questHist":50,"importancia":"alta","semana":2,"dia":"sexta"},
+    {"id":"tpc003","hier":"06.03","nome":"Atos Processuais e Prazos","nivel":1,"questHist":45,"importancia":"alta","semana":3,"dia":"sabado"},
+    {"id":"tpc004","hier":"06.04","nome":"Processo de Conhecimento","nivel":2,"questHist":60,"importancia":"alta","semana":4,"dia":"domingo"},
+    {"id":"tpc005","hier":"06.05","nome":"Recursos","nivel":2,"questHist":55,"importancia":"alta","semana":5,"dia":"segunda"},
+    {"id":"tpc006","hier":"06.06","nome":"Cumprimento de Sentença e Execução","nivel":2,"questHist":45,"importancia":"alta","semana":6,"dia":"terca"},
+    {"id":"tpc007","hier":"06.07","nome":"Tutela Provisória","nivel":2,"questHist":40,"importancia":"media","semana":7,"dia":"quarta"},
+    {"id":"tpc008","hier":"06.08","nome":"Procedimentos Especiais","nivel":3,"questHist":30,"importancia":"media","semana":8,"dia":"quinta"}
+  ]},
+  {"id":"informatica","nome":"Informática","cor":"#A5D6A7","questoes":10,"pontMax":10,"topicos":[
+    {"id":"ti001","hier":"07.01","nome":"Windows e Office — Word, Excel, PowerPoint","nivel":1,"questHist":70,"importancia":"alta","semana":1,"dia":"sexta"},
+    {"id":"ti002","hier":"07.02","nome":"Internet — Navegadores, E-mail, Segurança","nivel":1,"questHist":65,"importancia":"alta","semana":2,"dia":"sabado"},
+    {"id":"ti003","hier":"07.03","nome":"Redes — Conceitos Básicos","nivel":2,"questHist":45,"importancia":"media","semana":3,"dia":"domingo"},
+    {"id":"ti004","hier":"07.04","nome":"Segurança da Informação e LGPD","nivel":2,"questHist":55,"importancia":"alta","semana":4,"dia":"segunda"},
+    {"id":"ti005","hier":"07.05","nome":"Banco de Dados — Conceitos","nivel":2,"questHist":35,"importancia":"media","semana":5,"dia":"terca"}
+  ]},
+  {"id":"legislacao","nome":"Legislação Institucional","cor":"#FFCC80","questoes":10,"pontMax":10,"topicos":[
+    {"id":"tl001","hier":"08.01","nome":"Regimento Interno do TJ","nivel":1,"questHist":40,"importancia":"alta","semana":1,"dia":"quarta"},
+    {"id":"tl002","hier":"08.02","nome":"LOMAN — Lei Orgânica da Magistratura","nivel":1,"questHist":35,"importancia":"alta","semana":2,"dia":"quinta"},
+    {"id":"tl003","hier":"08.03","nome":"Estatuto dos Servidores do Estado","nivel":2,"questHist":30,"importancia":"alta","semana":3,"dia":"sexta"},
+    {"id":"tl004","hier":"08.04","nome":"Lei de Acesso à Informação — LAI","nivel":2,"questHist":25,"importancia":"media","semana":4,"dia":"sabado"},
+    {"id":"tl005","hier":"08.05","nome":"Processo Eletrônico — PJe e CNJ","nivel":2,"questHist":20,"importancia":"media","semana":5,"dia":"domingo"}
+  ]}
+];
+
+const ABBREV = {'etica':'ÉTICA','civil':'CIVIL','const':'CONST','penal':'PENAL','admin':'ADMIN','proc_civil':'D.PROC.CIV','proc_penal':'D.PROC.PEN','empresa':'EMPRESA','tribut':'TRIBUT','proc_trab':'PROC.TRAB','trabalho':'TRABALHO','consumidor':'CONSUMIDOR','eca':'ECA','financ':'FINANC','previd':'PREVID','ambient':'AMBIENT','eleit':'ELEIT','humanos':'HUMANOS','filosof':'FILOSOF','intern':'INTERN'};
+const DIAS = ['segunda','terca','quarta','quinta','sexta','sabado','domingo'];
+const DIAS_FULL = {segunda:'Segunda',terca:'Ter\u00e7a',quarta:'Quarta',quinta:'Quinta',sexta:'Sexta',sabado:'S\u00e1bado',domingo:'Domingo'};
+const STATUS_LABELS = {proximo:'\ud83d\udd1c Pr\u00f3ximo',iniciado:'\u26a1 Iniciado',revisar:'\ud83d\udd04 Revisar',finalizado:'\u2705 Finalizado'};
+
+const EXAMS = [
+  { id: 'tj_analista', nome: 'Analista Judici\u00e1rio', fase1: '2026-12-01', fase2: '2027-02-01', edital: 'A definir' },
+  { id: 'tj_tecnico', nome: 'T\u00e9cnico Judici\u00e1rio', fase1: '2026-12-01', fase2: '2027-02-01', edital: 'A definir' },
+];
+let selectedExam = null;
+let filterToday = false;
+let filterRevisao = false;
+var filterImportancia = []; // array of 'alta'|'media'|'baixa' (multi-select)
+const IMP_ORDER = {alta:0, media:1, baixa:2};
+function sortByImportancia(topics){
+  return [].concat(topics).sort(function(a,b){
+    var ia=IMP_ORDER[a.importancia]??2, ib=IMP_ORDER[b.importancia]??2;
+    if(ia!==ib) return ia-ib;
+    return (b.questHist||0)-(a.questHist||0);
+  });
+}
+let selectedDifficulty = null;
+
+const ALL_TOPICS = {};
+const MATERIA_BY_ID = {};
+MATERIAS_DATA.forEach(function(m){
+  MATERIA_BY_ID[m.id] = m;
+  m.topicos.forEach(function(t){ t.materiaId = m.id; ALL_TOPICS[t.id] = t; });
+});
+
+let state = { topicStates:{}, customTopics:[] };
+
+function loadState(){
+  try{ var s=localStorage.getItem('tj_v1_state'); if(s){ var p=JSON.parse(s); state=Object.assign(state,p); } }catch(e){}
+}
+function saveState(){
+  try{ localStorage.setItem('tj_v1_state',JSON.stringify(state)); }catch(e){}
+}
+
+function loadExamChoice(){
+  try{
+    var saved = localStorage.getItem('tj_v1_exam_choice');
+    if(saved){ selectedExam = EXAMS.find(function(e){ return e.id === saved; }) || null; }
+  }catch(e){}
+}
+function saveExamChoice(examId){
+  try{ localStorage.setItem('tj_v1_exam_choice', examId); }catch(e){}
+  selectedExam = EXAMS.find(function(e){ return e.id === examId; }) || null;
+  updateCountdown();
+  renderWeekTabs();
+  populateSemanaSelects();
+  hideExamOverlay();
+  showToast('Concurso selecionado: ' + (selectedExam ? selectedExam.nome : ''), 'success');
+}
+function showExamModal(){
+  renderExamCards();
+  var overlay = document.getElementById('exam-overlay');
+  if(overlay) overlay.style.display = 'flex';
+}
+function hideExamOverlay(){
+  var overlay = document.getElementById('exam-overlay');
+  if(overlay) overlay.style.display = 'none';
+}
+function renderExamCards(){
+  var container = document.getElementById('exam-cards-container');
+  if(!container) return;
+  container.innerHTML = '';
+  EXAMS.forEach(function(exam){
+    var fase1Date = new Date(exam.fase1 + 'T09:00:00');
+    var now = new Date();
+    var diffDays = Math.max(0, Math.floor((fase1Date - now) / (1000*60*60*24)));
+    var isSelected = selectedExam && selectedExam.id === exam.id;
+    var card = document.createElement('div');
+    card.className = 'exam-card' + (isSelected ? ' selected' : '');
+    card.innerHTML =
+      '<div class="exam-card-name">' + esc(exam.nome) + '</div>' +
+      '<div class="exam-card-dates">' +
+        '1\u00aa Fase: <strong>' + formatExamDate(exam.fase1) + '</strong><br>' +
+        '2\u00aa Fase: <strong>' + formatExamDate(exam.fase2) + '</strong><br>' +
+        'Edital: ' + esc(exam.edital) +
+      '</div>' +
+      '<div class="exam-card-countdown">' + diffDays + '</div>' +
+      '<div class="exam-card-countdown-lbl">dias at\u00e9 a 1\u00aa Fase</div>' +
+      '<button class="exam-card-btn">' + (isSelected ? '\u2705 Selecionado' : 'Selecionar') + '</button>';
+    (function(eid){ card.querySelector('.exam-card-btn').addEventListener('click', function(){ saveExamChoice(eid); }); })(exam.id);
+    container.appendChild(card);
+  });
+}
+function formatExamDate(dateStr){
+  var parts = dateStr.split('-');
+  return parts[2] + '/' + parts[1] + '/' + parts[0];
+}
+
+function getTopicState(id){
+  var t=ALL_TOPICS[id]||(state.customTopics||[]).find(function(x){return x.id===id;});
+  if(!t) return null;
+  return state.topicStates[id]||{status:'proximo',method:'video',day:t.dia,semana:t.semana,notes:'',studied:false,studiedDate:null,difficulty:null,needsReview:false};
+}
+function setTopicState(id,partial){
+  var cur=getTopicState(id)||{status:'proximo',method:'video',day:'segunda',semana:1,notes:'',studied:false,studiedDate:null,difficulty:null,needsReview:false};
+  var merged=Object.assign({},cur,partial);
+  // Auto-iniciado: qualquer alteracao move proximo -> iniciado
+  if(cur.status==='proximo'&&!partial.hasOwnProperty('status')){merged.status='iniciado';}
+  state.topicStates[id]=merged;
+  saveState();
+  updateOverallProgress();
+}
+
+let currentMainTab='planejamento', currentWeek=1, currentView='dias';
+var _dragJustEnded=false; // flag para evitar click após drag
+
+function switchMainTab(tab){
+  currentMainTab=tab;
+  ['planejamento','materias','estatisticas','questoes'].forEach(function(t){
+    var el=document.getElementById('tab-'+t);
+    if(el) el.classList.toggle('active', t===tab);
+  });
+  document.querySelectorAll('.main-tab').forEach(function(btn,i){
+    btn.classList.toggle('active', ['planejamento','materias','estatisticas','questoes'][i]===tab);
+  });
+  if(tab==='materias') renderMaterias();
+  if(tab==='estatisticas') renderStats();
+  if(tab==='questoes') initQuiz();
+}
+
+// Calcula total de semanas até 2 dias antes da prova
+function calcTotalWeeks(){
+  var examDate = selectedExam ? new Date(selectedExam.fase1+'T09:00:00') : new Date('2026-05-03T09:00:00');
+  examDate.setDate(examDate.getDate()-2); // 2 dias antes
+  var today = new Date();
+  today.setHours(0,0,0,0);
+  var diffDays = Math.ceil((examDate-today)/(1000*60*60*24));
+  return Math.max(4, Math.ceil(diffDays/7));
+}
+function renderWeekTabs(){
+  var container = document.getElementById('week-tabs-container');
+  if(!container) return;
+  var total = calcTotalWeeks();
+  container.innerHTML='';
+  for(var w=1;w<=total;w++){
+    (function(week){
+      var btn = document.createElement('button');
+      btn.className = 'week-tab'+(week===currentWeek?' active':'');
+      btn.textContent = 'Semana '+week;
+      btn.addEventListener('click',function(){ switchWeek(week); });
+      container.appendChild(btn);
+    })(w);
+  }
+}
+function populateSemanaSelects(){
+  var total = calcTotalWeeks();
+  ['edit-semana','add-semana'].forEach(function(selId){
+    var sel = document.getElementById(selId);
+    if(!sel) return;
+    var cur = sel.value;
+    sel.innerHTML='';
+    for(var w=1;w<=total;w++){
+      var opt = document.createElement('option');
+      opt.value=w; opt.textContent='Semana '+w;
+      sel.appendChild(opt);
+    }
+    if(cur) sel.value=cur;
+  });
+}
+function switchWeek(w){
+  currentWeek=w;
+  renderWeekTabs();
+  renderCurrentView();
+}
+
+function switchView(v){
+  currentView=v;
+  document.getElementById('view-dias').classList.toggle('active', v==='dias');
+  document.getElementById('view-kanban').classList.toggle('active', v==='kanban');
+  renderCurrentView();
+}
+
+function getTodayDayName(){
+  var map = ['domingo','segunda','terca','quarta','quinta','sexta','sabado'];
+  return map[new Date().getDay()];
+}
+
+function getTodayLabel(){
+  var d = new Date();
+  var dayNames = ['Domingo','Segunda-feira','Ter\u00e7a-feira','Quarta-feira','Quinta-feira','Sexta-feira','S\u00e1bado'];
+  var monthNames = ['Janeiro','Fevereiro','Mar\u00e7o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  return dayNames[d.getDay()] + ', ' + d.getDate() + ' de ' + monthNames[d.getMonth()] + ' de ' + d.getFullYear();
+}
+
+function getTopicsForWeek(week){
+  var out=[];
+  MATERIAS_DATA.forEach(function(m){
+    m.topicos.forEach(function(t){
+      var ts=state.topicStates[t.id];
+      var eff = ts ? (ts.semana||t.semana) : t.semana;
+      if(eff===week) out.push(t);
+    });
+  });
+  (state.customTopics||[]).forEach(function(t){
+    var ts=state.topicStates[t.id];
+    var eff = ts ? (ts.semana||t.semana) : t.semana;
+    if(eff===week) out.push(t);
+  });
+  return out;
+}
+
+function getTopicsForDay(week,day){
+  return getTopicsForWeek(week).filter(function(t){
+    var ts=state.topicStates[t.id];
+    var effDay = ts ? (ts.day||t.dia) : t.dia;
+    return effDay===day;
+  });
+}
+
+function getTopicsForStatus(week,status){
+  return getTopicsForWeek(week).filter(function(t){
+    var ts=state.topicStates[t.id];
+    var effStatus = ts ? (ts.status||'proximo') : 'proximo';
+    return effStatus===status;
+  });
+}
+
+function getSearch(){
+  var el=document.getElementById('search-input');
+  return el ? el.value.trim().toLowerCase() : '';
+}
+
+function filterSearch(topics){
+  var q=getSearch();
+  var list=topics;
+  if(q) list=list.filter(function(t){ return (t.nome||'').toLowerCase().includes(q)||(t.hier||'').toLowerCase().includes(q); });
+  if(filterImportancia.length>0) list=list.filter(function(t){ return filterImportancia.indexOf(t.importancia||'baixa')>=0; });
+  return sortByImportancia(list);
+}
+
+function isLight(hex){
+  if(!hex||hex.length<4) return false;
+  var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return (r*299+g*587+b*114)/1000>128;
+}
+
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function diffClass(n){
+  if(n===null||n===undefined) return '';
+  if(n<=3) return 'diff-easy';
+  if(n<=6) return 'diff-medium';
+  return 'diff-hard';
+}
+
+function diffBadgeHtml(n){
+  if(n===null||n===undefined) return '';
+  return '<span class="diff-badge '+diffClass(n)+'">\u2b50 '+n+'/10</span>';
+}
+
+function formatDate(isoStr){
+  if(!isoStr) return '';
+  var d = new Date(isoStr);
+  return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear();
+}
+function getScheduledDate(semana, dia){
+  var dayOffsets={segunda:0,terca:1,quarta:2,quinta:3,sexta:4,sabado:5,domingo:6};
+  var today=new Date(); today.setHours(0,0,0,0);
+  var dow=today.getDay(); // 0=Sun
+  var daysToMon=dow===0?-6:1-dow;
+  var thisMonday=new Date(today); thisMonday.setDate(today.getDate()+daysToMon);
+  var wkOff=(semana||1)-currentWeek;
+  var dayOff=dayOffsets[dia]||0;
+  var target=new Date(thisMonday); target.setDate(thisMonday.getDate()+wkOff*7+dayOff);
+  return ('0'+target.getDate()).slice(-2)+'/'+('0'+(target.getMonth()+1)).slice(-2);
+}
+
+function buildCard(topic){
+  var ts=getTopicState(topic.id)||{status:'proximo',method:'video',day:topic.dia,semana:topic.semana,notes:'',studied:false,studiedDate:null,difficulty:null,needsReview:false};
+  var m=MATERIA_BY_ID[topic.materiaId]||{cor:'#888',id:'custom'};
+  var imp=topic.importancia||'baixa';
+  var sClasses={proximo:'status-proximo',iniciado:'status-iniciado',revisar:'status-revisar',finalizado:'status-finalizado'};
+  var div=document.createElement('div');
+  var cardClasses = 'topic-card';
+  if(ts.studied) cardClasses += ' is-studied';
+  if(ts.needsReview) cardClasses += ' needs-review';
+  div.className=cardClasses;
+  div.draggable=true;
+  div.dataset.id=topic.id;
+  var abbrevVal=ABBREV[m.id]||(m.id||'').toUpperCase();
+  var tc=isLight(m.cor)?'#1A1A2E':'#fff';
+  var impLabel=imp==='alta'?'\ud83d\udd34 Alta':imp==='media'?'\ud83d\udfe1 M\u00e9dia':'\ud83d\udfe2 Baixa';
+  var studiedMeta = '';
+  if(ts.studied){
+    studiedMeta = '<div class="topic-studied-meta">\u2705 Estudado em: '+formatDate(ts.studiedDate)+' '+diffBadgeHtml(ts.difficulty)+'</div>';
+  }
+  var reviewMeta = '';
+  if(ts.needsReview){
+    reviewMeta = '<div class="topic-review-meta">\ud83d\udd04 Para revis\u00e3o</div>';
+  }
+  var studiedBtnClass = 'btn-studied' + (ts.studied ? ' studied' : '');
+  var revisaoBtnClass = 'btn-revisao' + (ts.needsReview ? ' active' : '');
+  var effSemana=ts.semana||topic.semana||1;
+  var effDia=ts.day||topic.dia||'segunda';
+  var schedDate=getScheduledDate(effSemana,effDia);
+  div.innerHTML=
+    '<div class="topic-card-header">'+
+      '<span class="tag tag-subj" style="background:'+m.cor+';color:'+tc+'">'+abbrevVal+'</span>'+
+      '<span class="tag tag-imp-'+imp+'">'+impLabel+'</span>'+
+      '<span class="status-dot '+(sClasses[ts.status]||'status-proximo')+'" title="'+esc(STATUS_LABELS[ts.status]||'')+'"></span>'+
+    '</div>'+
+    (topic.hier?'<div class="topic-hier">'+esc(topic.hier)+'</div>':'')+
+    '<div class="topic-nome truncate" title="'+esc(topic.nome)+'">'+esc(topic.nome)+'</div>'+
+    '<div class="topic-sched">\ud83d\udcc5 '+schedDate+' \u2022 '+DIAS_FULL[effDia]+' \u2022 Sem. '+effSemana+'</div>'+
+    studiedMeta+
+    reviewMeta+
+    '<div class="topic-footer">'+
+      '<select class="method-select">'+
+        '<option value="video"'+(ts.method==='video'?' selected':'')+'>\ud83d\udcf9 V\u00eddeo</option>'+
+        '<option value="questoes"'+(ts.method==='questoes'?' selected':'')+'>\u2753 Quest\u00f5es</option>'+
+        '<option value="leitura"'+(ts.method==='leitura'?' selected':'')+'>\ud83d\udcd6 Leitura</option>'+
+      '</select>'+
+      '<div class="card-actions">'+
+        '<button class="'+studiedBtnClass+'" title="'+(ts.studied?'Desmarcar como estudado':'Marcar como estudado')+'">'+(ts.studied?'\u2705':'\u25a1')+' Estudado</button>'+
+        '<button class="'+revisaoBtnClass+'" title="Marcar para revis\u00e3o">\ud83d\udd04</button>'+
+        '<button class="btn-icon" title="Editar">\u270f\ufe0f</button>'+
+        '<button class="btn-icon delete" title="Excluir">\ud83d\uddd1\ufe0f</button>'+
+      '</div>'+
+    '</div>';
+  var sel=div.querySelector('.method-select');
+  if(sel){ sel.addEventListener('change',function(){ changeMethod(topic.id,this.value); }); sel.addEventListener('click',function(e){ e.stopPropagation(); }); }
+  var btnStudied=div.querySelector('.btn-studied');
+  if(btnStudied){ btnStudied.addEventListener('click',function(e){ e.stopPropagation(); toggleStudied(topic.id); }); }
+  var btnRevisao=div.querySelector('.btn-revisao');
+  if(btnRevisao){ btnRevisao.addEventListener('click',function(e){ e.stopPropagation(); toggleRevisao(topic.id); }); }
+  var btnEdit=div.querySelector('.btn-icon:not(.delete)');
+  if(btnEdit){ btnEdit.addEventListener('click',function(e){ e.stopPropagation(); openEditModal(topic.id); }); }
+  var btnDel=div.querySelector('.btn-icon.delete');
+  if(btnDel){ btnDel.addEventListener('click',function(e){ e.stopPropagation(); openDeleteModal(topic.id); }); }
+  div.addEventListener('click',function(e){ if(_dragJustEnded) return; if(!e.target.closest('.method-select')&&!e.target.closest('.card-actions')&&!e.target.closest('button')&&!e.target.closest('select')){ openTopicDetail(topic.id); } });
+  div.addEventListener('dragstart',function(e){
+    _dragJustEnded=false;
+    e.dataTransfer.setData('text/plain',topic.id);
+    e.dataTransfer.effectAllowed='move';
+    setTimeout(function(){ div.classList.add('dragging'); },0);
+  });
+  div.addEventListener('dragend',function(){ div.classList.remove('dragging'); _dragJustEnded=true; setTimeout(function(){ _dragJustEnded=false; },350); });
+  return div;
+}
+
+function toggleStudied(id){
+  var ts = getTopicState(id) || {};
+  if(ts.studied){
+    setTopicState(id,{studied:false,studiedDate:null,difficulty:null});
+    renderCurrentView();
+    showToast('T\u00f3pico desmarcado como estudado','success');
+  } else {
+    openStudiedModal(id);
+  }
+}
+
+function toggleRevisao(id){
+  var ts = getTopicState(id) || {};
+  var newVal = !ts.needsReview;
+  var newStatus = ts.status || 'proximo';
+  if(newVal && newStatus !== 'finalizado') newStatus = 'revisar';
+  setTopicState(id,{needsReview:newVal,status:newStatus});
+  renderCurrentView();
+  showToast(newVal ? '\ud83d\udd04 Marcado para revis\u00e3o' : 'Revis\u00e3o removida', 'success');
+}
+
+function openStudiedModal(id){
+  var t = ALL_TOPICS[id]||(state.customTopics||[]).find(function(x){ return x.id===id; });
+  if(!t) return;
+  var ts = getTopicState(id) || {};
+  var ie = document.getElementById('studied-topic-id');
+  if(ie) ie.value = id;
+  var ne = document.getElementById('studied-topic-name');
+  if(ne) ne.textContent = t.nome;
+  var notesEl = document.getElementById('studied-notes');
+  if(notesEl) notesEl.value = ts.notes || '';
+  var revEl = document.getElementById('studied-revisao');
+  if(revEl) revEl.checked = ts.needsReview || false;
+  selectedDifficulty = (ts.difficulty !== null && ts.difficulty !== undefined) ? ts.difficulty : null;
+  renderDiffButtons();
+  openModal('studied-modal');
+}
+
+function renderDiffButtons(){
+  var container = document.getElementById('diff-rating-btns');
+  if(!container) return;
+  container.innerHTML = '';
+  for(var i=0; i<=10; i++){
+    (function(n){
+      var btn = document.createElement('button');
+      btn.className = 'diff-btn';
+      btn.textContent = n;
+      if(selectedDifficulty === n){
+        if(n<=3) btn.classList.add('sel-easy');
+        else if(n<=6) btn.classList.add('sel-medium');
+        else btn.classList.add('sel-hard');
+      }
+      btn.addEventListener('click', function(){ selectedDifficulty = n; renderDiffButtons(); });
+      container.appendChild(btn);
+    })(i);
+  }
+}
+
+function saveStudied(){
+  var id = document.getElementById('studied-topic-id').value;
+  if(!id) return;
+  var notes = (document.getElementById('studied-notes').value || '').trim();
+  var needsReview = document.getElementById('studied-revisao').checked;
+  var diff = selectedDifficulty;
+  var ts = getTopicState(id) || {};
+  var newStatus = needsReview ? 'revisar' : (ts.status || 'proximo');
+  setTopicState(id,{
+    studied: true,
+    studiedDate: new Date().toISOString(),
+    difficulty: diff,
+    notes: notes,
+    needsReview: needsReview,
+    status: newStatus
+  });
+  closeModal('studied-modal');
+  renderCurrentView();
+  if(currentMainTab==='estatisticas') renderStats();
+  showToast('\u2705 T\u00f3pico marcado como estudado!', 'success');
+}
+
+function setupDrop(el,onDrop){
+  el.addEventListener('dragover',function(e){ e.preventDefault(); e.dataTransfer.dropEffect='move'; el.classList.add('drag-over'); });
+  el.addEventListener('dragleave',function(){ el.classList.remove('drag-over'); });
+  el.addEventListener('drop',function(e){
+    e.preventDefault(); el.classList.remove('drag-over');
+    var id=e.dataTransfer.getData('text/plain');
+    if(id) onDrop(id);
+  });
+}
+
+function renderDaysView(){
+  var c=document.getElementById('plan-view-container');
+  c.innerHTML='';
+  var todayDay = getTodayDayName();
+  var profileDias = studyProfile && studyProfile.dias && studyProfile.dias.length>0 ? studyProfile.dias : DIAS;
+  var todayIsStudyDay = profileDias.indexOf(todayDay)>=0;
+  if(filterToday){
+    var banner = document.createElement('div');
+    banner.className = 'today-banner';
+    if(!todayIsStudyDay){
+      banner.innerHTML = '\ud83d\udccd ' + getTodayLabel() + ' \u2014 <span style="color:#FFB300">dia sem estudo no seu perfil</span>';
+      c.appendChild(banner);
+      return;
+    }
+    banner.innerHTML = '\ud83d\udcc5 ' + getTodayLabel();
+    c.appendChild(banner);
+  }
+  var activeDias = DIAS.filter(function(d){ return profileDias.indexOf(d)>=0; });
+  var grid=document.createElement('div');
+  grid.className='days-grid';
+  grid.style.setProperty('--days-cols', activeDias.length);
+  activeDias.forEach(function(day){
+    var topics = filterSearch(getTopicsForDay(currentWeek,day));
+    if(filterRevisao){
+      topics = topics.filter(function(t){ var ts=state.topicStates[t.id]; return ts&&ts.needsReview; });
+    }
+    var col=document.createElement('div');
+    var colClass = 'day-col';
+    if(filterToday){
+      if(day===todayDay) colClass += ' today-col';
+      else colClass += ' not-today';
+    }
+    col.className = colClass;
+    col.innerHTML='<div class="day-header">'+(DIAS_FULL[day]||day)+'</div><div class="day-topics" id="day-'+day+'"></div>';
+    setupDrop(col,function(id){ setTopicState(id,{day:day,semana:currentWeek}); renderCurrentView(); });
+    var td=col.querySelector('.day-topics');
+    if(topics.length===0){
+      td.innerHTML='<div class="empty-state"><div class="empty-icon">\ud83d\udced</div><div class="empty-text">Sem t\u00f3picos</div></div>';
+    } else {
+      topics.forEach(function(t){ td.appendChild(buildCard(t)); });
+    }
+    grid.appendChild(col);
+  });
+  c.appendChild(grid);
+}
+
+function renderKanbanView(){
+  var c=document.getElementById('plan-view-container');
+  c.innerHTML='';
+  var todayDay = getTodayDayName();
+  var _profileDiasK = studyProfile && studyProfile.dias && studyProfile.dias.length>0 ? studyProfile.dias : DIAS;
+  var _todayIsStudyDayK = _profileDiasK.indexOf(todayDay)>=0;
+  if(filterToday){
+    var banner = document.createElement('div');
+    banner.className = 'today-banner';
+    if(!_todayIsStudyDayK){
+      banner.innerHTML = '\ud83d\udccd ' + getTodayLabel() + ' \u2014 <span style="color:#FFB300">dia sem estudo no seu perfil</span>';
+      c.appendChild(banner);
+      return;
+    }
+    banner.innerHTML = '\ud83d\udcc5 Mostrando t\u00f3picos de hoje \u2014 ' + getTodayLabel();
+    c.appendChild(banner);
+  }
+  var grid=document.createElement('div');
+  grid.className='kanban-grid';
+  var statuses=['proximo','iniciado','revisar','finalizado'];
+  var daysOrder=['domingo','segunda','terca','quarta','quinta','sexta','sabado'];
+  var todayIdx=daysOrder.indexOf(todayDay);
+  var today=new Date();
+  var todayStr=today.toISOString().split('T')[0];
+  function isOnlyProximo(t){
+    var ts=getTopicState(t.id)||{};
+    return ts.status==='proximo';
+  }
+  function getSmartProximos(){
+    var all2=[].concat(Object.values(ALL_TOPICS)).concat(state.customTopics||[]);
+    var profileDias=studyProfile&&studyProfile.dias?studyProfile.dias:['segunda','terca','quarta','quinta','sexta'];
+    var todayIsStudyDay=profileDias.indexOf(todayDay)>=0;
+    // 1. Atrasados: status proximo E agendados antes de hoje E em dia de estudo do perfil
+    var overdue=all2.filter(function(t){
+      if(!isOnlyProximo(t)) return false;
+      var ts=getTopicState(t.id)||{};
+      var tW=ts.semana||t.semana||1; var tD=ts.day||t.dia||'segunda';
+      if(profileDias.indexOf(tD)<0) return false;
+      var tDi=daysOrder.indexOf(tD);
+      return tW<currentWeek||(tW===currentWeek&&tDi<todayIdx);
+    });
+    if(overdue.length>0) return sortByImportancia(overdue);
+    // 2. Hoje (só se hoje é dia de estudo no perfil) — apenas status proximo
+    var smart=[];
+    if(todayIsStudyDay){
+      var todayTs=all2.filter(function(t){
+        if(!isOnlyProximo(t)) return false;
+        var ts=getTopicState(t.id)||{};
+        return (ts.semana||t.semana||1)===currentWeek&&(ts.day||t.dia||'segunda')===todayDay;
+      });
+      smart=[].concat(todayTs);
+    }
+    // 3. Revisões vencidas (status revisar com nextReviewDate vencida)
+    var dueRev=all2.filter(function(t){
+      var ts=state.topicStates[t.id];
+      if(!ts||ts.status==='finalizado'||ts.status==='proximo') return false;
+      return ts.status==='revisar'&&ts.nextReviewDate&&ts.nextReviewDate<=todayStr;
+    });
+    dueRev.forEach(function(t){ if(!smart.find(function(x){return x.id===t.id;})) smart.push(t); });
+    if(smart.length>0) return sortByImportancia(smart);
+    // 4. Próximos dias de ESTUDO — apenas status proximo
+    var upcoming=[];
+    var totalWeeks2=calcTotalWeeks();
+    for(var off=1;off<=14&&upcoming.length<25;off++){
+      var fi=(todayIdx+off)%7;
+      var fd=daysOrder[fi];
+      if(profileDias.indexOf(fd)<0) continue;
+      var wkOffset=Math.floor((todayIdx+off)/7);
+      var fw=currentWeek+wkOffset;
+      if(fw>totalWeeks2) break;
+      all2.forEach(function(t){
+        if(!isOnlyProximo(t)) return;
+        var ts=getTopicState(t.id)||{};
+        if((ts.semana||t.semana||1)===fw&&(ts.day||t.dia||'segunda')===fd){
+          if(!upcoming.find(function(x){return x.id===t.id;})) upcoming.push(t);
+        }
+      });
+    }
+    return sortByImportancia(upcoming);
+  }
+  var sIcons={proximo:'\ud83d\udd1c',iniciado:'\u26a1',revisar:'\ud83d\udd04',finalizado:'\u2705'};
+  var sNames={proximo:'Pr\u00f3ximos',iniciado:'Iniciado',revisar:'Revisar',finalizado:'Finalizado'};
+  var sExtra={proximo:'<span class="kanban-smart-badge">inteligente</span>',iniciado:'',revisar:'',finalizado:''};
+  statuses.forEach(function(status){
+    var topics;
+    if(status==='proximo'){
+      topics=filterSearch(getSmartProximos());
+    } else {
+      topics=filterSearch(getTopicsForStatus(currentWeek,status));
+      if(filterToday){
+        topics=topics.filter(function(t){
+          var ts=state.topicStates[t.id];
+          var effDay=ts?(ts.day||t.dia):t.dia;
+          return effDay===todayDay;
+        });
+      }
+    }
+    if(filterRevisao){
+      topics=topics.filter(function(t){ var ts=state.topicStates[t.id]; return ts&&ts.needsReview; });
+    }
+    var col=document.createElement('div');
+    col.className='kanban-col';
+    col.dataset.status=status;
+    col.innerHTML=
+      '<div class="kanban-header"><span>'+sIcons[status]+' '+sNames[status]+(sExtra[status]||'')+'</span>'+
+      '<span class="kanban-count">'+topics.length+'</span></div>'+
+      '<div class="kanban-topics" id="kanban-'+status+'"></div>';
+    (function(st){
+      var dropHandler=function(id){
+        _dragJustEnded=true;
+        setTopicState(id,{status:st,semana:currentWeek});
+        setTimeout(function(){
+          renderCurrentView();
+          if(currentMainTab==='estatisticas') renderStats();
+          setTimeout(function(){ _dragJustEnded=false; },300);
+        },10);
+      };
+      setupDrop(col,dropHandler);
+      var td=col.querySelector('.kanban-topics');
+      if(topics.length===0){
+        td.innerHTML='<div class="empty-state"><div class="empty-text">Arraste t\u00f3picos aqui</div></div>';
+      } else {
+        topics.forEach(function(t){ td.appendChild(buildCard(t)); });
+      }
+      setupDrop(td,dropHandler);
+    })(status);
+    grid.appendChild(col);
+  });
+  c.appendChild(grid);
+}
+
+function renderCurrentView(){
+  if(currentView==='dias') renderDaysView();
+  else renderKanbanView();
+}
+
+function renderMaterias(){
+  var c=document.getElementById('materias-list');
+  c.innerHTML='';
+  var sorted=[].concat(MATERIAS_DATA).sort(function(a,b){ return a.nome.localeCompare(b.nome,'pt-BR'); });
+  sorted.forEach(function(materia){
+    var total=materia.topicos.length;
+    var done=materia.topicos.filter(function(t){ var ts=state.topicStates[t.id]; return ts&&ts.status==='finalizado'; }).length;
+    var pct=total>0?Math.round(done/total*100):0;
+    var item=document.createElement('div');
+    item.className='materia-item';
+    item.innerHTML=
+      '<div class="materia-header">'+
+        '<div class="materia-color-dot" style="background:'+materia.cor+'"></div>'+
+        '<div class="materia-info">'+
+          '<div class="materia-name">'+esc(materia.nome)+'</div>'+
+          '<div class="materia-meta">'+materia.questoes+' quest\u00f5es \u00b7 '+materia.pontMax+' pts \u00b7 '+total+' t\u00f3picos</div>'+
+        '</div>'+
+        '<div class="materia-progress">'+
+          '<div class="materia-progress-label"><span>'+done+'/'+total+'</span><span>'+pct+'%</span></div>'+
+          '<div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:'+pct+'%;background:'+materia.cor+'"></div></div>'+
+        '</div>'+
+        '<div class="materia-chevron" id="chev-'+materia.id+'">\u25bc</div>'+
+      '</div>'+
+      '<div class="materia-topics-list" id="topics-'+materia.id+'"></div>';
+    var hdr=item.querySelector('.materia-header');
+    if(hdr){ (function(mid){ hdr.addEventListener('click',function(){ toggleMateria(mid); }); })(materia.id); }
+    c.appendChild(item);
+  });
+}
+
+function toggleMateria(id){
+  var list=document.getElementById('topics-'+id);
+  var chev=document.getElementById('chev-'+id);
+  if(!list) return;
+  var isOpen=list.classList.contains('open');
+  if(isOpen){ list.classList.remove('open'); chev.classList.remove('open'); return; }
+  list.classList.add('open'); chev.classList.add('open');
+  if(list.children.length===0){
+    var m=MATERIA_BY_ID[id];
+    if(!m) return;
+    var impColors={alta:'#FF5252',media:'#FFB300',baixa:'#66BB6A'};
+    var sorted=[].concat(m.topicos).sort(function(a,b){
+      return(a.hier||'').localeCompare(b.hier||'',undefined,{numeric:true,sensitivity:'base'});
+    });
+    sorted.forEach(function(t){
+      var ts=state.topicStates[t.id];
+      var status=ts?ts.status:'proximo';
+      var sEmoji={proximo:'\ud83d\udd1c',iniciado:'\u26a1',revisar:'\ud83d\udd04',finalizado:'\u2705'}[status]||'\ud83d\udd1c';
+      var row=document.createElement('div');
+      row.className='materia-topic-row level-'+(t.nivel||1);
+      row.style.cursor='pointer';
+      row.innerHTML=
+        '<div class="materia-topic-hier">'+esc(t.hier||'')+'</div>'+
+        '<div class="materia-topic-imp" style="background:'+(impColors[t.importancia]||'#888')+'" title="'+esc(t.importancia||'')+'"></div>'+
+        '<div class="materia-topic-name">'+esc(t.nome)+'</div>'+
+        '<div class="materia-topic-status">'+sEmoji+' '+esc(STATUS_LABELS[status]||'Pr\u00f3ximo')+'</div>';
+      (function(tid){ row.addEventListener('click',function(){ openTopicDetail(tid); }); })(t.id);
+      list.appendChild(row);
+    });
+  }
+}
+
+function renderStats(){
+  var all=[].concat(Object.values(ALL_TOPICS)).concat(state.customTopics||[]);
+  var total=all.length;
+  var done=all.filter(function(t){ var ts=state.topicStates[t.id]; return ts&&ts.status==='finalizado'; }).length;
+  var pct=total>0?Math.round(done/total*100):0;
+  var studiedTopics=all.filter(function(t){ var ts=state.topicStates[t.id]; return ts&&ts.studied; });
+  var studiedCount=studiedTopics.length;
+  var reviewCount=all.filter(function(t){ var ts=state.topicStates[t.id]; return ts&&ts.needsReview; }).length;
+  var totalDiff=0, diffCount=0;
+  studiedTopics.forEach(function(t){
+    var ts=state.topicStates[t.id];
+    if(ts && ts.difficulty!==null && ts.difficulty!==undefined){ totalDiff+=ts.difficulty; diffCount++; }
+  });
+  var avgDiff = diffCount>0 ? (totalDiff/diffCount).toFixed(1) : '--';
+  var startDate=new Date('2026-03-21');
+  var today=new Date();
+  var weeksElapsed=Math.max(0,Math.min(8,Math.floor((today-startDate)/(7*24*60*60*1000))));
+  document.getElementById('stats-grid').innerHTML=
+    '<div class="stat-card"><div class="stat-num">'+total+'</div><div class="stat-label">Total de T\u00f3picos</div></div>'+
+    '<div class="stat-card"><div class="stat-num">'+pct+'%</div><div class="stat-label">Conclu\u00eddo</div></div>'+
+    '<div class="stat-card"><div class="stat-num">'+done+'</div><div class="stat-label">Finalizados</div></div>'+
+    '<div class="stat-card"><div class="stat-num">'+weeksElapsed+'/8</div><div class="stat-label">Semanas Decorridas</div></div>'+
+    '<div class="stat-card"><div class="stat-num" style="color:#4CAF50">'+studiedCount+'</div><div class="stat-label">T\u00f3picos Estudados</div></div>'+
+    '<div class="stat-card"><div class="stat-num" style="color:#FFB300">'+avgDiff+'</div><div class="stat-label">M\u00e9dia de Dificuldade</div></div>'+
+    '<div class="stat-card"><div class="stat-num" style="color:#FF9800">'+reviewCount+'</div><div class="stat-label">Para Revis\u00e3o</div></div>';
+  var subList=document.getElementById('subject-progress-list');
+  subList.innerHTML='';
+  [].concat(MATERIAS_DATA).sort(function(a,b){ return b.pontMax-a.pontMax; }).forEach(function(m){
+    var mT=m.topicos.length;
+    var mD=m.topicos.filter(function(t){ var ts=state.topicStates[t.id]; return ts&&ts.status==='finalizado'; }).length;
+    var mP=mT>0?Math.round(mD/mT*100):0;
+    var row=document.createElement('div');
+    row.className='subject-prog-row';
+    row.innerHTML=
+      '<div class="subj-prog-dot" style="background:'+m.cor+'"></div>'+
+      '<div class="subj-prog-name">'+esc(m.nome)+'</div>'+
+      '<div class="subj-prog-bar-wrap"><div class="subj-prog-bar" style="width:'+mP+'%;background:'+m.cor+'"></div></div>'+
+      '<div class="subj-prog-pct">'+mD+'/'+mT+'</div>';
+    subList.appendChild(row);
+  });
+  var tbody=document.getElementById('week-table-body');
+  tbody.innerHTML='';
+  var totalWeeks=calcTotalWeeks();
+  for(var w=1;w<=totalWeeks;w++){
+    var wT=getTopicsForWeek(w);
+    var wD=wT.filter(function(t){ var ts=state.topicStates[t.id]; return ts&&ts.status==='finalizado'; }).length;
+    var wP=wT.length>0?Math.round(wD/wT.length*100):0;
+    var isCurrentWk=w===currentWeek;
+    tbody.innerHTML+='<tr'+(isCurrentWk?' style="background:rgba(108,99,255,0.06)"':'')+'><td><strong>Semana '+w+'</strong>'+(isCurrentWk?' <span style="font-size:0.65rem;color:#A78BFA">← atual</span>':'')+'</td><td>'+wT.length+'</td><td>'+wD+'</td><td>'+wP+'%</td>'+
+      '<td><div class="progress-bar-wrap" style="min-width:80px"><div class="progress-bar-fill" style="width:'+wP+'%"></div></div></td></tr>';
+  }
+  var methods={video:0,questoes:0,leitura:0,none:0};
+  all.forEach(function(t){ var ts=state.topicStates[t.id]; var mm=ts?ts.method:null; if(mm&&methods[mm]!==undefined) methods[mm]++; else methods.none++; });
+  document.getElementById('method-breakdown').innerHTML=
+    '<div class="method-card"><div class="method-icon">\ud83d\udcf9</div><div class="method-count">'+methods.video+'</div><div class="method-name">V\u00eddeo</div></div>'+
+    '<div class="method-card"><div class="method-icon">\u2753</div><div class="method-count">'+methods.questoes+'</div><div class="method-name">Quest\u00f5es</div></div>'+
+    '<div class="method-card"><div class="method-icon">\ud83d\udcd6</div><div class="method-count">'+methods.leitura+'</div><div class="method-name">Leitura</div></div>'+
+    '<div class="method-card"><div class="method-icon">\u2699\ufe0f</div><div class="method-count">'+methods.none+'</div><div class="method-name">Padr\u00e3o</div></div>';
+  var hardTopics = all.filter(function(t){
+    var ts=state.topicStates[t.id];
+    return ts && ts.studied && ts.difficulty!==null && ts.difficulty!==undefined && ts.difficulty>=7;
+  }).sort(function(a,b){
+    return state.topicStates[b.id].difficulty - state.topicStates[a.id].difficulty;
+  }).slice(0,10);
+  var hardSec = document.getElementById('hard-topics-section');
+  var hardList = document.getElementById('hard-topics-list');
+  renderAccuracyStats(all);
+  if(hardTopics.length>0){
+    if(hardSec) hardSec.style.display='';
+    if(hardList){
+      hardList.innerHTML='';
+      hardTopics.forEach(function(t){
+        var ts=state.topicStates[t.id];
+        var m2=MATERIA_BY_ID[t.materiaId]||{cor:'#888'};
+        var row=document.createElement('div');
+        row.className='hard-topic-row';
+        row.innerHTML=
+          '<div class="materia-color-dot" style="background:'+m2.cor+'"></div>'+
+          '<div class="hard-topic-name">'+esc(t.nome)+'</div>'+
+          '<div class="hard-topic-diff '+diffClass(ts.difficulty)+'">'+ts.difficulty+'/10</div>';
+        hardList.appendChild(row);
+      });
+    }
+  } else {
+    if(hardSec) hardSec.style.display='none';
+  }
+}
+
+function updateOverallProgress(){
+  var all=[].concat(Object.values(ALL_TOPICS)).concat(state.customTopics||[]);
+  var total=all.length;
+  var done=all.filter(function(t){ var ts=state.topicStates[t.id]; return ts&&ts.status==='finalizado'; }).length;
+  var pct=total>0?Math.round(done/total*100):0;
+  var pe=document.getElementById('overall-pct'); if(pe) pe.textContent=pct+'%';
+  var be=document.getElementById('overall-bar'); if(be) be.style.width=pct+'%';
+  if(currentMainTab==='estatisticas'){ try{ renderStats(); }catch(e){} }
+}
+
+function updateCountdown(){
+  var examDate, lblText;
+  if(selectedExam){
+    examDate = new Date(selectedExam.fase1 + 'T09:00:00');
+    lblText = '1\u00aa Fase \u00b7 ' + selectedExam.nome + ' \u00b7 ' + formatExamDate(selectedExam.fase1);
+  } else {
+    examDate = new Date('2026-12-01T09:00:00');
+    lblText = '1\u00aa Fase \u00b7 46\u00ba Exame \u00b7 03/05/2026';
+  }
+  var lbl = document.getElementById('countdown-label');
+  if(lbl) lbl.textContent = lblText;
+  var now=new Date();
+  var diff=examDate-now;
+  if(diff<=0){
+    ['cd-days','cd-hours','cd-mins','cd-secs'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent='00'; });
+    return;
+  }
+  var days=Math.floor(diff/(1000*60*60*24));
+  var hours=Math.floor((diff%(1000*60*60*24))/(1000*60*60));
+  var mins=Math.floor((diff%(1000*60*60))/(1000*60));
+  var secs=Math.floor((diff%(1000*60))/1000);
+  var se=function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
+  se('cd-days',String(days).padStart(3,'0'));
+  se('cd-hours',String(hours).padStart(2,'0'));
+  se('cd-mins',String(mins).padStart(2,'0'));
+  se('cd-secs',String(secs).padStart(2,'0'));
+}
+
+function openModal(id){ var el=document.getElementById(id); if(el) el.classList.add('open'); }
+function closeModal(id){
+  if(id==='edit-modal'){
+    var tid=document.getElementById('edit-topic-id');
+    if(tid&&tid.value){
+      var t2=ALL_TOPICS[tid.value]||(state.customTopics||[]).find(function(x){return x.id===tid.value;});
+      if(t2){
+        var nn=document.getElementById('edit-nome').value.trim();
+        if(nn) t2.nome=nn;
+        t2.importancia=document.getElementById('edit-importancia').value;
+        setTopicState(tid.value,{
+          method:document.getElementById('edit-method').value,
+          status:document.getElementById('edit-status').value,
+          day:document.getElementById('edit-dia').value,
+          semana:parseInt(document.getElementById('edit-semana').value),
+          notes:document.getElementById('edit-notes').value
+        });
+      }
+    }
+  }
+  var el=document.getElementById(id); if(el) el.classList.remove('open');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(function(m){
+  m.addEventListener('click',function(e){ if(e.target===m) m.classList.remove('open'); });
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(function(m){ m.classList.remove('open'); });
+});
+
+function openEditModal(id){
+  populateSemanaSelects();
+  var t=ALL_TOPICS[id]||(state.customTopics||[]).find(function(x){ return x.id===id; });
+  if(!t) return;
+  var ts=getTopicState(id);
+  var sv=function(eid,v){ var e=document.getElementById(eid); if(e) e.value=String(v||''); };
+  sv('edit-topic-id',id); sv('edit-nome',t.nome);
+  sv('edit-importancia',t.importancia||'baixa');
+  sv('edit-method',ts?ts.method:'video');
+  sv('edit-status',ts?ts.status:'proximo');
+  sv('edit-dia',ts?ts.day:(t.dia||'segunda'));
+  sv('edit-semana',ts?ts.semana:(t.semana||1));
+  sv('edit-notes',ts?(ts.notes||''):'');
+  openModal('edit-modal');
+}
+
+function saveEdit(){
+  var id=document.getElementById('edit-topic-id').value;
+  var t=ALL_TOPICS[id]||(state.customTopics||[]).find(function(x){ return x.id===id; });
+  if(!t) return;
+  var newName=document.getElementById('edit-nome').value.trim();
+  if(newName) t.nome=newName;
+  t.importancia=document.getElementById('edit-importancia').value;
+  setTopicState(id,{
+    method:document.getElementById('edit-method').value,
+    status:document.getElementById('edit-status').value,
+    day:document.getElementById('edit-dia').value,
+    semana:parseInt(document.getElementById('edit-semana').value),
+    notes:document.getElementById('edit-notes').value
+  });
+  closeModal('edit-modal');
+  renderCurrentView();
+  if(currentMainTab==='materias') renderMaterias();
+  if(currentMainTab==='estatisticas') renderStats();
+  showToast('T\u00f3pico atualizado!','success');
+}
+
+function openAddModal(){
+  populateSemanaSelects();
+  var sel=document.getElementById('add-materia');
+  if(sel){
+    sel.innerHTML='';
+    MATERIAS_DATA.forEach(function(m){ var o=document.createElement('option'); o.value=m.id; o.textContent=m.nome; sel.appendChild(o); });
+  }
+  var se=document.getElementById('add-semana'); if(se){ populateSemanaSelects(); se.value=String(currentWeek); }
+  openModal('add-modal');
+}
+
+let customIdCnt=Date.now();
+function saveAdd(){
+  var materiaId=document.getElementById('add-materia').value;
+  var nome=document.getElementById('add-nome').value.trim();
+  if(!nome){ showToast('Informe o nome do t\u00f3pico','error'); return; }
+  var semana=parseInt(document.getElementById('add-semana').value);
+  var dia=document.getElementById('add-dia').value;
+  var imp=document.getElementById('add-importancia').value;
+  var method=document.getElementById('add-method').value;
+  var newT={id:'custom_'+(++customIdCnt),hier:'',nome:nome,nivel:1,questHist:0,importancia:imp,semana:semana,dia:dia,materiaId:materiaId};
+  state.customTopics=(state.customTopics||[]).concat(newT);
+  setTopicState(newT.id,{status:'proximo',method:method,day:dia,semana:semana,notes:'',studied:false,studiedDate:null,difficulty:null,needsReview:false});
+  closeModal('add-modal');
+  var ne=document.getElementById('add-nome'); if(ne) ne.value='';
+  renderCurrentView();
+  showToast('T\u00f3pico adicionado!','success');
+}
+
+function openDeleteModal(id){
+  var t=ALL_TOPICS[id]||(state.customTopics||[]).find(function(x){ return x.id===id; });
+  if(!t) return;
+  var ie=document.getElementById('delete-topic-id'); if(ie) ie.value=id;
+  var ne=document.getElementById('delete-topic-name'); if(ne) ne.textContent=t.nome;
+  openModal('delete-modal');
+}
+
+function confirmDelete(){
+  var ie=document.getElementById('delete-topic-id');
+  if(!ie) return;
+  var id=ie.value;
+  state.customTopics=(state.customTopics||[]).filter(function(t){ return t.id!==id; });
+  if(state.topicStates[id]) delete state.topicStates[id];
+  saveState();
+  closeModal('delete-modal');
+  renderCurrentView();
+  if(currentMainTab==='materias') renderMaterias();
+  if(currentMainTab==='estatisticas') renderStats();
+  showToast('T\u00f3pico exclu\u00eddo','success');
+}
+
+function changeMethod(id,method){ setTopicState(id,{method:method}); }
+
+function showToast(msg,type){
+  var c=document.getElementById('toast-container');
+  if(!c) return;
+  var t=document.createElement('div');
+  t.className='toast '+(type||'success');
+  t.textContent=msg;
+  c.appendChild(t);
+  setTimeout(function(){ t.classList.add('out'); setTimeout(function(){ if(t.parentNode) t.remove(); },300); },2500);
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  var btnHoje = document.getElementById('filter-hoje-btn');
+  if(btnHoje){
+    btnHoje.addEventListener('click', function(){
+      filterToday = !filterToday;
+      btnHoje.classList.toggle('active', filterToday);
+      renderCurrentView();
+    });
+  }
+  var btnRevisao = document.getElementById('filter-revisao-btn');
+  if(btnRevisao){
+    btnRevisao.addEventListener('click', function(){
+      filterRevisao = !filterRevisao;
+      btnRevisao.classList.toggle('active', filterRevisao);
+      renderCurrentView();
+    });
+  }
+  // Filtros de importância (multi-select: cada botão é independente)
+  ['alta','media','baixa'].forEach(function(imp){
+    var btn=document.getElementById('filter-imp-'+imp);
+    if(!btn) return;
+    btn.addEventListener('click',function(){
+      var idx=filterImportancia.indexOf(imp);
+      if(idx>=0){ filterImportancia.splice(idx,1); btn.classList.remove('active'); }
+      else { filterImportancia.push(imp); btn.classList.add('active'); }
+      renderCurrentView();
+    });
+  });
+  var btnTrocar = document.getElementById('btn-trocar-exame');
+  if(btnTrocar){
+    btnTrocar.addEventListener('click', function(){ showExamModal(); });
+  }
+  initSupabase();
+  checkSession();
+  loadProfile();
+  loadExamChoice();
+  if(!selectedExam){ showExamModal(); }
+  checkSession();
+  loadState();
+  renderWeekTabs();
+  populateSemanaSelects();
+  updateOverallProgress();
+  updateCountdown();
+  setInterval(updateCountdown,1000);
+  renderCurrentView();
+});
+
+
+// ===== STUDY PROFILE =====
+var studyProfile={dias:['segunda','terca','quarta','quinta','sexta'],horasPorDia:{segunda:2,terca:2,quarta:2,quinta:2,sexta:2,sabado:0,domingo:0},foco:'alta'};
+function loadProfile(){
+  try{var s=localStorage.getItem('tj_v1_study_profile');if(s){var p=JSON.parse(s);studyProfile=Object.assign(studyProfile,p);}}catch(e){}
+}
+function saveProfileToStorage(){
+  try{localStorage.setItem('tj_v1_study_profile',JSON.stringify(studyProfile));}catch(e){}
+}
+function renderProfileHours(){
+  var hg=document.getElementById('profile-hours-grid');
+  if(!hg) return;
+  hg.innerHTML='';
+  DIAS.forEach(function(d){
+    var isActive=studyProfile.dias.indexOf(d)>=0;
+    var val=isActive?(studyProfile.horasPorDia[d]||0):0;
+    var lbl=DIAS_FULL[d]||d;
+    hg.innerHTML+='<div class="profile-hour-row">'+
+      '<span style="color:'+(isActive?'var(--text)':'var(--text3)')+'">'+lbl+'</span>'+
+      '<input type="number" class="profile-hour-input" min="0" max="12" step="0.5" value="'+val+'" data-day="'+d+'" '+(isActive?'':'disabled style="opacity:0.35;cursor:not-allowed"')+' onchange="updateProfileHour(this)">'+
+    '</div>';
+  });
+}
+function openProfileModal(){
+  document.querySelectorAll('.profile-day-btn').forEach(function(btn){
+    btn.classList.toggle('active',studyProfile.dias.indexOf(btn.dataset.day)>=0);
+  });
+  renderProfileHours();
+  var focusSel=document.getElementById('profile-focus');
+  if(focusSel) focusSel.value=studyProfile.foco||'alta';
+  openModal('profile-modal');
+}
+function toggleProfileDay(day){
+  var idx=studyProfile.dias.indexOf(day);
+  if(idx>=0){
+    studyProfile.dias.splice(idx,1);
+    studyProfile.horasPorDia[day]=0; // zera ao desativar
+  } else {
+    studyProfile.dias.push(day);
+    if(!studyProfile.horasPorDia[day]) studyProfile.horasPorDia[day]=2; // padrão 2h
+  }
+  document.querySelectorAll('.profile-day-btn').forEach(function(btn){
+    btn.classList.toggle('active',studyProfile.dias.indexOf(btn.dataset.day)>=0);
+  });
+  renderProfileHours(); // re-renderiza inputs com disabled atualizado
+}
+function updateProfileHour(input){
+  if(input.disabled) return;
+  studyProfile.horasPorDia[input.dataset.day]=parseFloat(input.value)||0;
+}
+function saveProfileSettings(){
+  var focusSel=document.getElementById('profile-focus');
+  if(focusSel) studyProfile.foco=focusSel.value;
+  document.querySelectorAll('.profile-hour-input').forEach(function(inp){
+    var d=inp.dataset.day;
+    if(studyProfile.dias.indexOf(d)>=0){
+      studyProfile.horasPorDia[d]=parseFloat(inp.value)||0;
+    } else {
+      studyProfile.horasPorDia[d]=0; // garante zero para dias inativos
+    }
+  });
+  saveProfileToStorage();
+  renderCurrentView();
+  closeModal('profile-modal');
+  showToast('Perfil de estudos salvo!','success');
+}
+
+// ===== ARTICLE & CONCEPT PARSING =====
+function parseArticleRange(nome){
+  var arts=[];
+  function cleanNum(s){ return parseInt(s.replace(/\./g,'').replace(/[\xba\xb0]/g,'')); }
+  // Extract from parentheses if present: (arts. X a Y) or (arts. X e Y)
+  var src=nome;
+  var parenMatch=nome.match(/\(([^)]*arts?[^)]*)\)/i);
+  if(parenMatch) src=parenMatch[1];
+  // Range: "arts. X a Y" or "art. Xo a Y"
+  var m=src.match(/arts?\.?\s*([\d\.]+[\xba\xb0]?)\s+(?:[a\xc0]o?)\s+([\d\.]+[\xba\xb0]?)/i);
+  if(m){
+    var s=cleanNum(m[1]), e=cleanNum(m[2]);
+    if(!isNaN(s)&&!isNaN(e)&&e>=s&&(e-s)<=300){ for(var i=s;i<=e;i++) arts.push(i); }
+  }
+  // "arts. X e Y" (two specific articles)
+  if(arts.length===0){
+    var m2=src.match(/arts?\.?\s*([\d\.]+[\xba\xb0]?)\s+e\s+([\d\.]+[\xba\xb0]?)/i);
+    if(m2){
+      var a1=cleanNum(m2[1]), a2=cleanNum(m2[2]);
+      if(!isNaN(a1)) arts.push(a1);
+      if(!isNaN(a2)&&a2!==a1) arts.push(a2);
+    }
+  }
+  // Single article: "art. X"
+  if(arts.length===0){
+    var m3=src.match(/\bart\.?\s*([\d\.]+[\xba\xb0]?)/i);
+    if(m3){ var n=cleanNum(m3[1]); if(!isNaN(n)) arts.push(n); }
+  }
+  return arts;
+}
+function parseConceptItems(nome){
+  var items=[];
+  var matches=nome.match(/\(([^)]+)\)/g);
+  if(!matches) return items;
+  matches.forEach(function(group){
+    var inner=group.slice(1,-1);
+    if(/arts?\.\s*[\d]/i.test(inner)) return;
+    inner.split(/[,;]/).forEach(function(s){
+      var t=s.trim().replace(/\s*[-–]\s*art\..*$/i,'').trim();
+      if(t&&t.length>1) items.push(t);
+    });
+  });
+  return items;
+}
+function getDirectChildren(topic){
+  var hier=topic.hier;
+  if(!hier) return [];
+  var depth=hier.split('.').length;
+  var matId=topic.materiaId;
+  return Object.values(ALL_TOPICS).filter(function(t){
+    if(!t.hier||t.hier===hier) return false;
+    if(t.materiaId!==matId) return false; // mesma matéria apenas
+    if(!t.hier.startsWith(hier+'.')) return false;
+    return t.hier.split('.').length===depth+1;
+  }).sort(function(a,b){
+    return (a.hier||'').localeCompare(b.hier||'',undefined,{numeric:true,sensitivity:'base'});
+  });
+}
+function getAllDescendants(topic){
+  var hier=topic.hier;
+  if(!hier) return [];
+  var matId=topic.materiaId;
+  return Object.values(ALL_TOPICS).filter(function(t){
+    if(!t.hier||t.hier===hier) return false;
+    if(t.materiaId!==matId) return false;
+    return t.hier.startsWith(hier+'.');
+  }).sort(function(a,b){
+    return (a.hier||'').localeCompare(b.hier||'',undefined,{numeric:true,sensitivity:'base'});
+  });
+}
+
+// ===== SPACED REPETITION =====
+function calcNextReview(ts){
+  var diff=(ts.difficulty!==null&&ts.difficulty!==undefined)?ts.difficulty:5;
+  var reviewCount=ts.reviewCount||0;
+  var feitas=ts.questoesFeigas||0;
+  var acertou=ts.questoesAcertou||0;
+  var baseIntervals=[1,3,7,14,21,30,60];
+  var interval=baseIntervals[Math.min(reviewCount,baseIntervals.length-1)];
+  var diffFactor=Math.max(0.3,2.0-diff*0.17);
+  interval=Math.round(interval*diffFactor);
+  if(feitas>0){
+    var acc=acertou/feitas;
+    if(acc>=0.7) interval=Math.round(interval*1.4);
+    else if(acc<0.5) interval=Math.max(1,Math.round(interval*0.5));
+  }
+  interval=Math.max(1,Math.min(90,interval));
+  var next=new Date();next.setDate(next.getDate()+interval);
+  return next.toISOString().split('T')[0];
+}
+function formatDateBR(iso){
+  if(!iso) return '';
+  var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];
+}
+
+// ===== TOPIC DETAIL MODAL =====
+var tdSelectedDifficulty=null;
+var tdSelectedStatus=null;
+function openTopicDetail(id){
+  var t=ALL_TOPICS[id]||(state.customTopics||[]).find(function(x){return x.id===id;});
+  if(!t) return;
+  var ts=getTopicState(id)||{};
+  var m=MATERIA_BY_ID[t.materiaId]||{};
+  document.getElementById('td-topic-id').value=id;
+  document.getElementById('td-topic-name').textContent=t.nome;
+  var tc=isLight(m.cor)?'#111':'#fff';
+  var abbr=ABBREV[t.materiaId]||m.nome||'';
+  var impLabel={alta:'🔴 Alta',media:'🟡 Média',baixa:'🟢 Baixa'}[t.importancia]||'';
+  document.getElementById('td-topic-meta').innerHTML=
+    (t.hier?'<span class="tag tag-subj" style="background:'+m.cor+';color:'+tc+'">'+esc(abbr)+'</span>':'')+
+    '<span class="tag tag-imp-'+(t.importancia||'baixa')+'">'+impLabel+'</span>'+
+    (t.hier?'<span style="font-size:0.7rem;color:var(--text3);font-family:Outfit,sans-serif">'+esc(t.hier)+'</span>':'');
+  var nr=ts.nextReviewDate;
+  var nrEl=document.getElementById('td-next-review');
+  if(nr){
+    var todayStr=new Date().toISOString().split('T')[0];
+    var daysLeft=Math.ceil((new Date(nr)-new Date(todayStr))/(86400000));
+    var msg=daysLeft<=0?'⚠️ Revisão atrasada!':'📅 Próxima revisão: <span>'+formatDateBR(nr)+'</span> ('+daysLeft+'d)';
+    nrEl.innerHTML=(ts.reviewCount?'🔄 Revisão #'+ts.reviewCount+' · ':'')+msg;
+  } else { nrEl.textContent=''; }
+  // Study methods
+  var vOk=document.getElementById('td-video-ok'); if(vOk) vOk.checked=ts.videoAssistido||false;
+  var lOk=document.getElementById('td-leiseca-ok'); if(lOk) lOk.checked=ts.leisecaLida||false;
+  var qOk=document.getElementById('td-questoes-ok'); if(qOk) qOk.checked=(ts.questoesFeigas||0)>0;
+  var qf=document.getElementById('td-quest-feitas'); if(qf) qf.value=ts.questoesFeigas||0;
+  var qa=document.getElementById('td-quest-acertou'); if(qa) qa.value=ts.questoesAcertou||0;
+  var qe=document.getElementById('td-quest-errou'); if(qe) qe.value=ts.questoesErrou||0;
+  updateAccuracy();
+  // Checklist
+  var arts=parseArticleRange(t.nome);
+  var concepts=parseConceptItems(t.nome);
+  var checkSec=document.getElementById('td-checklist-section');
+  if(arts.length>0){
+    checkSec.style.display='';
+    renderArticleChecklist(id,arts,ts.artigos||{});
+  } else if(concepts.length>0){
+    checkSec.style.display='';
+    renderConceptChecklist(id,concepts,ts.conceitos||{});
+  } else { checkSec.style.display='none'; }
+  // Children
+  var children=getDirectChildren(t);
+  var childSec=document.getElementById('td-children-section');
+  var childList=document.getElementById('td-children-list');
+  if(children.length>0){
+    childSec.style.display='';
+    childList.innerHTML='';
+    children.forEach(function(child){
+      var cts=getTopicState(child.id)||{};
+      var sEmoji={proximo:'🔜',iniciado:'⚡',revisar:'🔄',finalizado:'✅'}[cts.status||'proximo']||'🔜';
+      var row=document.createElement('div');
+      row.style='display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;background:var(--bg);border:1px solid var(--border);font-size:0.78rem;cursor:pointer;transition:background 0.15s';
+      row.innerHTML='<span style="font-size:0.62rem;color:var(--text3);font-family:Outfit,sans-serif;min-width:48px">'+esc(child.hier)+'</span>'+
+        '<span style="flex:1;color:var(--text2)">'+esc(child.nome)+'</span><span>'+sEmoji+'</span>';
+      (function(cid){row.addEventListener('click',function(){closeModal('topic-detail-modal');setTimeout(function(){openTopicDetail(cid);},150);});})(child.id);
+      childList.appendChild(row);
+    });
+  } else { childSec.style.display='none'; }
+  // Difficulty
+  tdSelectedDifficulty=(ts.difficulty!==null&&ts.difficulty!==undefined)?ts.difficulty:null;
+  renderTdDiffButtons();
+  // Notes
+  var notesEl=document.getElementById('td-notes'); if(notesEl) notesEl.value=ts.notes||'';
+  // Status
+  tdSelectedStatus=ts.status||'proximo';
+  renderTdStatus();
+  openModal('topic-detail-modal');
+}
+function renderArticleChecklist(id,arts,checked){
+  var container=document.getElementById('td-checklist-items');
+  var total=arts.length;
+  var done=arts.filter(function(a){return checked[a];}).length;
+  updateChecklistProg(done,total);
+  container.innerHTML='';
+  var grid=document.createElement('div'); grid.className='checklist-grid';
+  arts.forEach(function(a){
+    var item=document.createElement('div');
+    item.className='checklist-art-item'+(checked[a]?' checked':'');
+    item.innerHTML='<input type="checkbox"'+(checked[a]?' checked':'')+'><span>art. '+a+'</span>';
+    (function(artNum,el){
+      el.querySelector('input').addEventListener('change',function(){
+        var ts=getTopicState(id)||{};
+        var arts2=Object.assign({},ts.artigos||{});
+        if(this.checked) arts2[artNum]=true; else delete arts2[artNum];
+        setTopicState(id,{artigos:arts2,studied:Object.keys(arts2).length>0||ts.studied});
+        el.classList.toggle('checked',this.checked);
+        var ts2=getTopicState(id)||{};
+        var newDone=arts.filter(function(x){return ts2.artigos&&ts2.artigos[x];}).length;
+        updateChecklistProg(newDone,arts.length);
+        if(currentMainTab==='estatisticas') renderStats();
+      });
+    })(a,item);
+    grid.appendChild(item);
+  });
+  container.appendChild(grid);
+}
+function renderConceptChecklist(id,concepts,checked){
+  var container=document.getElementById('td-checklist-items');
+  var total=concepts.length;
+  var done=concepts.filter(function(_,i){return checked[i];}).length;
+  updateChecklistProg(done,total);
+  container.innerHTML='';
+  var list=document.createElement('div'); list.className='checklist-concepts';
+  concepts.forEach(function(c,i){
+    var item=document.createElement('div');
+    item.className='checklist-concept-item'+(checked[i]?' checked':'');
+    item.innerHTML='<input type="checkbox"'+(checked[i]?' checked':'')+'><span>'+esc(c)+'</span>';
+    (function(idx,el){
+      el.querySelector('input').addEventListener('change',function(){
+        var ts=getTopicState(id)||{};
+        var concs=Object.assign({},ts.conceitos||{});
+        if(this.checked) concs[idx]=true; else delete concs[idx];
+        setTopicState(id,{conceitos:concs,studied:Object.keys(concs).length>0||ts.studied});
+        el.classList.toggle('checked',this.checked);
+        var ts2=getTopicState(id)||{};
+        var newDone=concepts.filter(function(_,j){return ts2.conceitos&&ts2.conceitos[j];}).length;
+        updateChecklistProg(newDone,concepts.length);
+        if(currentMainTab==='estatisticas') renderStats();
+      });
+    })(i,item);
+    list.appendChild(item);
+  });
+  container.appendChild(list);
+}
+function updateChecklistProg(done,total){
+  var pct=total>0?Math.round(done/total*100):0;
+  var fill=document.getElementById('td-check-prog-fill'); if(fill) fill.style.width=pct+'%';
+  var lbl=document.getElementById('td-check-prog-lbl'); if(lbl) lbl.textContent=done+'/'+total+' marcados ('+pct+'%)';
+}
+function renderTdDiffButtons(){
+  var container=document.getElementById('td-diff-btns');
+  if(!container) return;
+  container.innerHTML='';
+  for(var i=0;i<=10;i++){
+    (function(n){
+      var btn=document.createElement('button');
+      btn.className='diff-btn';
+      btn.textContent=n;
+      if(tdSelectedDifficulty===n){
+        if(n<=3) btn.classList.add('sel-easy');
+        else if(n<=6) btn.classList.add('sel-medium');
+        else btn.classList.add('sel-hard');
+      }
+      btn.addEventListener('click',function(){tdSelectedDifficulty=n;renderTdDiffButtons();});
+      container.appendChild(btn);
+    })(i);
+  }
+}
+function renderTdStatus(){
+  document.querySelectorAll('#td-status-selector .status-sel-btn').forEach(function(btn){
+    var s=btn.dataset.status;
+    btn.className='status-sel-btn'+(s===tdSelectedStatus?' active-'+s:'');
+  });
+}
+function selectTdStatus(status){tdSelectedStatus=status;renderTdStatus();}
+function updateAccuracy(){
+  var f=parseInt((document.getElementById('td-quest-feitas')||{}).value||0)||0;
+  var a=parseInt((document.getElementById('td-quest-acertou')||{}).value||0)||0;
+  var badge=document.getElementById('td-accuracy-badge');
+  if(!badge) return;
+  if(f>0){
+    var pct=Math.round(a/f*100);
+    var cls=pct>=70?'acc-good':(pct>=50?'acc-ok':'acc-bad');
+    badge.className='quest-accuracy '+cls;
+    badge.textContent=pct+'% acerto';
+  } else { badge.className='quest-accuracy'; badge.textContent=''; }
+}
+function saveTopicDetail(){
+  var id=document.getElementById('td-topic-id').value;
+  if(!id) return;
+  var videoOk=(document.getElementById('td-video-ok')||{}).checked||false;
+  var lsOk=(document.getElementById('td-leiseca-ok')||{}).checked||false;
+  var feitas=parseInt((document.getElementById('td-quest-feitas')||{}).value||0)||0;
+  var acertou=parseInt((document.getElementById('td-quest-acertou')||{}).value||0)||0;
+  var errou=parseInt((document.getElementById('td-quest-errou')||{}).value||0)||0;
+  var notes=((document.getElementById('td-notes')||{}).value||'').trim();
+  var ts=getTopicState(id)||{};
+  var reviewCount=ts.reviewCount||0;
+  if(feitas>0&&feitas!==(ts.questoesFeigas||0)) reviewCount++;
+  var autoRevisao=feitas>0&&(acertou/feitas)<0.7;
+  var finalStatus=tdSelectedStatus||ts.status||'iniciado';
+  if(autoRevisao&&finalStatus!=='finalizado') finalStatus='revisar';
+  var isStudied=videoOk||lsOk||(feitas>0)||ts.studied;
+  var tempTs={difficulty:tdSelectedDifficulty,questoesFeigas:feitas,questoesAcertou:acertou,reviewCount:reviewCount};
+  setTopicState(id,{
+    videoAssistido:videoOk,leisecaLida:lsOk,
+    questoesFeigas:feitas,questoesAcertou:acertou,questoesErrou:errou,
+    notes:notes,difficulty:tdSelectedDifficulty,
+    studied:isStudied,
+    studiedDate:isStudied?(ts.studiedDate||new Date().toISOString()):ts.studiedDate,
+    needsReview:autoRevisao,status:finalStatus,
+    reviewCount:reviewCount,
+    nextReviewDate:isStudied?calcNextReview(tempTs):ts.nextReviewDate
+  });
+  closeModal('topic-detail-modal');
+  renderCurrentView();
+  if(currentMainTab==='estatisticas') renderStats();
+  showToast('✅ Tópico salvo!','success');
+}
+function closeTopicDetail(){
+  var id=document.getElementById('td-topic-id').value;
+  if(id){
+    var videoOk=(document.getElementById('td-video-ok')||{}).checked||false;
+    var lsOk=(document.getElementById('td-leiseca-ok')||{}).checked||false;
+    var feitas=parseInt((document.getElementById('td-quest-feitas')||{}).value||0)||0;
+    var acertou=parseInt((document.getElementById('td-quest-acertou')||{}).value||0)||0;
+    var errou=parseInt((document.getElementById('td-quest-errou')||{}).value||0)||0;
+    var notes=((document.getElementById('td-notes')||{}).value||'').trim();
+    var ts=getTopicState(id)||{};
+    var isStudied=videoOk||lsOk||(feitas>0)||ts.studied;
+    var autoRevisao=feitas>0&&(acertou/feitas)<0.7;
+    var curStatus=tdSelectedStatus||ts.status||'proximo';
+    if(autoRevisao&&curStatus!=='finalizado') curStatus='revisar';
+    var reviewCount=ts.reviewCount||0;
+    if(feitas>0&&feitas!==(ts.questoesFeigas||0)) reviewCount++;
+    var tempTs={difficulty:tdSelectedDifficulty,questoesFeigas:feitas,questoesAcertou:acertou,reviewCount:reviewCount};
+    setTopicState(id,{
+      videoAssistido:videoOk,leisecaLida:lsOk,
+      questoesFeigas:feitas,questoesAcertou:acertou,questoesErrou:errou,
+      notes:notes,difficulty:tdSelectedDifficulty,
+      studied:isStudied,
+      studiedDate:isStudied?(ts.studiedDate||new Date().toISOString()):ts.studiedDate,
+      needsReview:autoRevisao,status:curStatus,
+      reviewCount:reviewCount,
+      nextReviewDate:isStudied?calcNextReview(tempTs):ts.nextReviewDate
+    });
+    renderCurrentView();
+    if(currentMainTab==='estatisticas') renderStats();
+  }
+  closeModal('topic-detail-modal');
+  if(currentMainTab==='estatisticas') renderStats();
+}
+
+// ===== ENHANCED STATS ACCURACY =====
+function renderAccuracyStats(all){
+  var accList=document.getElementById('accuracy-list');
+  if(!accList) return;
+  accList.innerHTML='';
+  var materiaAcc=[];
+  MATERIAS_DATA.forEach(function(m){
+    var totalF=0,totalA=0;
+    m.topicos.forEach(function(t){
+      var ts=state.topicStates[t.id];
+      if(ts&&ts.questoesFeigas>0){totalF+=ts.questoesFeigas;totalA+=ts.questoesAcertou||0;}
+    });
+    if(totalF>0) materiaAcc.push({m:m,feitas:totalF,acertou:totalA,pct:Math.round(totalA/totalF*100)});
+  });
+  materiaAcc.sort(function(a,b){return a.pct-b.pct;}).forEach(function(item){
+    var cls=item.pct>=70?'acc-good':(item.pct>=50?'acc-ok':'acc-bad');
+    var row=document.createElement('div');
+    row.className='acc-row';
+    row.innerHTML='<div class="materia-color-dot" style="background:'+item.m.cor+'"></div>'+
+      '<div class="acc-row-name">'+esc(item.m.nome)+'</div>'+
+      '<div class="acc-row-val '+cls+'">'+item.pct+'%</div>'+
+      '<div style="font-size:0.7rem;color:var(--text3)">'+item.acertou+'/'+item.feitas+' questões</div>';
+    accList.appendChild(row);
+  });
+  if(materiaAcc.length===0) accList.innerHTML='<div style="font-size:0.8rem;color:var(--text3);padding:8px">Nenhuma questão registrada ainda. Abra um tópico e registre suas questões.</div>';
+  // Checklist stats
+  var checkEl=document.getElementById('checklist-stats');
+  if(checkEl){
+    var totalArts=0,doneArts=0;
+    all.forEach(function(t){
+      var ts=state.topicStates[t.id];
+      var arts=parseArticleRange(t.nome);
+      var concepts=parseConceptItems(t.nome);
+      if(arts.length>0){totalArts+=arts.length;doneArts+=ts&&ts.artigos?Object.keys(ts.artigos).length:0;}
+      else if(concepts.length>0){totalArts+=concepts.length;doneArts+=ts&&ts.conceitos?Object.keys(ts.conceitos).length:0;}
+    });
+    var checkPct=totalArts>0?Math.round(doneArts/totalArts*100):0;
+    checkEl.innerHTML='<div class="stat-card"><div class="stat-num" style="color:#4CAF50">'+checkPct+'%</div><div class="stat-label">Artigos/Pontos Concluídos</div></div>'+
+      '<div class="stat-card"><div class="stat-num">'+doneArts+'/'+totalArts+'</div><div class="stat-label">Checklist Total</div></div>';
+  }
+}
+
+// ─── Quiz / Questões ────────────────────────────────────────────────────────
+
+var quizState = { current: 0, answered: [], questions: [], started: false };
+
+function initQuiz() {
+  if (!window.QUESTOES_OAB) {
+    var c = document.getElementById('quiz-container');
+    if (c) c.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text2)">⏳ Carregando questões...</div>';
+    var sc = document.createElement('script');
+    sc.src = 'questoes_data.js';
+    sc.onload = function() { initQuiz(); };
+    sc.onerror = function() {
+      if (c) c.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#EF5350">❌ Erro ao carregar questoes_data.js.<br>Certifique-se de que o arquivo está na mesma pasta do HTML.</div>';
+    };
+    document.head.appendChild(sc);
+    return;
+  }
+  var materiasSel = document.getElementById('quiz-materia-sel');
+  var materias = []; var seen = {};
+  QUESTOES_OAB.forEach(function(q){ if (!seen[q.materia]){ seen[q.materia]=1; materias.push(q.materia); } });
+  materias.sort();
+  materiasSel.innerHTML = '<option value="">📚 Todas as matérias</option>' +
+    materias.map(function(m){ return '<option value="'+esc(m)+'">'+esc(m)+'</option>'; }).join('');
+  var origemSel = document.getElementById('quiz-origem-sel');
+  var origens = []; var seenO = {};
+  QUESTOES_OAB.forEach(function(q){ if (q.origem && !seenO[q.origem]){ seenO[q.origem]=1; origens.push(q.origem); } });
+  origens.sort();
+  origemSel.innerHTML = '<option value="">📋 Todos os exames</option>' +
+    origens.map(function(o){ return '<option value="'+esc(o)+'">'+esc(o)+'</option>'; }).join('');
+  onMateriaChange();
+}
+
+function onMateriaChange() {
+  var materia = document.getElementById('quiz-materia-sel').value;
+  var temaSel = document.getElementById('quiz-tema-sel');
+  var temas = []; var seen = {};
+  QUESTOES_OAB.forEach(function(q){
+    if ((!materia || q.materia === materia) && !seen[q.tema]){ seen[q.tema]=1; temas.push(q.tema); }
+  });
+  temas.sort();
+  temaSel.innerHTML = '<option value="">📂 Todos os temas</option>' +
+    temas.map(function(t){ return '<option value="'+esc(t)+'">'+esc(t)+'</option>'; }).join('');
+  updateQuizCount();
+}
+
+function getFilteredQuestions() {
+  if (!window.QUESTOES_OAB) return [];
+  var materia = document.getElementById('quiz-materia-sel').value;
+  var tema = document.getElementById('quiz-tema-sel').value;
+  var origem = document.getElementById('quiz-origem-sel').value;
+  return QUESTOES_OAB.filter(function(q) {
+    if (materia && q.materia !== materia) return false;
+    if (tema && q.tema !== tema) return false;
+    if (origem && q.origem !== origem) return false;
+    return true;
+  });
+}
+
+function updateQuizCount() {
+  var qs = getFilteredQuestions();
+  var el = document.getElementById('quiz-count');
+  if (el) el.textContent = qs.length.toLocaleString('pt-BR') + ' questões';
+}
+
+function startQuiz() {
+  var all = getFilteredQuestions();
+  if (all.length === 0) { alert('Nenhuma questão encontrada com os filtros selecionados.'); return; }
+  var random = document.getElementById('quiz-random').checked;
+  var groups = getDueQuestions(all);
+  var due = groups.due, fresh = groups.fresh;
+  if (random) {
+    due.sort(function(){ return Math.random()-0.5; });
+    fresh.sort(function(){ return Math.random()-0.5; });
+  }
+  var qs = due.concat(fresh);
+  quizState = { current: 0, answered: new Array(qs.length).fill(null), questions: qs, started: true, wrongQueue: [], dueCount: due.length };
+  document.getElementById('quiz-filters').style.display = 'none';
+  var notice = document.getElementById('sr-notice');
+  if (notice) {
+    if (due.length > 0) { notice.style.display = ''; notice.textContent = '🔄 ' + due.length + ' questão(ões) para revisão hoje · ' + fresh.length + ' novas'; }
+    else notice.style.display = 'none';
+  }
+  renderQuiz();
+}
+
+function renderQuiz() {
+  var c = document.getElementById('quiz-container');
+  if (!c) return;
+  var qs = quizState.questions;
+  if (!qs || qs.length === 0) return;
+  var q = qs[quizState.current];
+  var ans = quizState.answered[quizState.current];
+  var answered = quizState.answered.filter(function(a){ return a!==null; }).length;
+  var correct = quizState.answered.filter(function(a,i){ return a!==null && a===qs[i].gabarito; }).length;
+  var pct = Math.round((quizState.current / qs.length) * 100);
+  var alts = ['A','B','C','D'];
+  var altsHtml = alts.map(function(letter) {
+    var cls = 'quiz-alt';
+    if (ans) {
+      if (letter === q.gabarito) cls += ' correct';
+      else if (letter === ans) cls += ' wrong';
+    }
+    var disabled = ans ? 'disabled' : '';
+    return '<button class="'+cls+'" '+disabled+' onclick="answerQuiz(\''+letter+'\')">' +
+      '<span class="alt-letter">'+letter+'</span><span>'+esc(q[letter.toLowerCase()])+'</span></button>';
+  }).join('');
+  var feedbackHtml = '';
+  if (ans) {
+    var comentHtml = q.comentarios ? '<div class="quiz-coment">'+esc(q.comentarios)+'</div>' : '';
+    feedbackHtml = (ans === q.gabarito)
+      ? '<div class="quiz-feedback correct">✅ Correto!</div>' + comentHtml
+      : '<div class="quiz-feedback wrong">❌ Incorreto — Gabarito: '+q.gabarito+'</div>' + comentHtml;
+  }
+  var prevBtn = quizState.current > 0
+    ? '<button class="btn" onclick="quizNav(-1)" style="background:var(--card);border:1px solid var(--border);color:var(--text)">← Anterior</button>'
+    : '<span></span>';
+  var nextBtn = '';
+  if (ans) {
+    nextBtn = quizState.current < qs.length - 1
+      ? '<button class="btn btn-primary" onclick="quizNav(1)">Próxima →</button>'
+      : '<button class="btn btn-primary" onclick="showQuizResult()">Ver Resultado</button>';
+  }
+  c.innerHTML =
+    '<div class="quiz-header">' +
+      '<div style="display:flex;align-items:center;gap:10px">' +
+        '<span class="quiz-progress">Questão '+(quizState.current+1)+' de '+qs.length+'</span>' +
+        '<button class="btn btn-secondary" onclick="backToFilters()" style="font-size:0.75rem;padding:4px 10px">&#8592; Filtros</button>' +
+      '</div>' +
+      '<span class="quiz-score">&#10003; '+correct+' &middot; &#10007; '+(answered-correct)+'</span>' +
+    '</div>' +
+    '<div class="quiz-progress-bar"><div class="quiz-progress-bar-fill" style="width:'+pct+'%"></div></div>' +
+    '<div class="quiz-card">' +
+      '<div class="quiz-disciplina">'+esc(q.materia)+' &middot; '+esc(q.tema)+'</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
+      '<span style="font-size:0.72rem;color:var(--text3)">'+esc(q.origem)+'</span>' +
+      srCardBadge(q.id) +
+      '</div>' +
+      '<div class="quiz-enunciado">'+esc(q.enunciado)+'</div>' +
+      '<div class="quiz-alternativas">'+altsHtml+'</div>' +
+      feedbackHtml +
+    '</div>' +
+    '<div class="quiz-nav">'+prevBtn+nextBtn+'</div>';
+}
+
+function answerQuiz(letter) {
+  if (quizState.answered[quizState.current] !== null) return;
+  quizState.answered[quizState.current] = letter;
+  var q = quizState.questions[quizState.current];
+  var correct = (letter === q.gabarito);
+  srUpdate(q.id, correct);
+  if (!correct) {
+    var already = quizState.wrongQueue.some(function(x){ return x.id === q.id; });
+    if (!already) quizState.wrongQueue.push(q);
+  }
+  renderQuiz();
+}
+
+function quizNav(dir) {
+  quizState.current = Math.max(0, Math.min(quizState.questions.length-1, quizState.current+dir));
+  renderQuiz();
+}
+
+function backToFilters() {
+  quizState = { current: 0, answered: [], questions: [], started: false };
+  var f = document.getElementById('quiz-filters');
+  if (f) f.style.display = '';
+  var c = document.getElementById('quiz-container');
+  if (c) c.innerHTML = '';
+}
+
+function srCardBadge(qid) {
+  var card = srGetCard(qid);
+  if (!card.dueDate) return '<span class="sr-badge new">NOVA</span>';
+  if (new Date(card.dueDate) <= new Date()) return '<span class="sr-badge due">REVISÃO</span>';
+  var days = Math.round((new Date(card.dueDate) - new Date()) / 86400000);
+  return '<span class="sr-badge known">+' + days + 'd</span>';
+}
+
+function showQuizResult() {
+  var c = document.getElementById('quiz-container');
+  if (!c) return;
+  var qs = quizState.questions;
+  var answered = quizState.answered.filter(function(a){ return a!==null; }).length;
+  var correct = quizState.answered.filter(function(a,i){ return a!==null && a===qs[i].gabarito; }).length;
+  var wrong = answered - correct;
+  var pct = answered > 0 ? Math.round((correct/answered)*100) : 0;
+  var emoji = pct >= 70 ? '🎉' : pct >= 50 ? '😊' : '📖';
+  var wrongHtml = '';
+  if (quizState.wrongQueue && quizState.wrongQueue.length > 0) {
+    wrongHtml =
+      '<div style="background:#FF525211;border:1px solid #FF525233;border-radius:10px;padding:14px;margin:16px 0;text-align:left">' +
+        '<div style="font-size:0.82rem;font-weight:700;color:#FF7070;margin-bottom:6px">🔄 ' + quizState.wrongQueue.length + ' questão(ões) errada(s)</div>' +
+        '<div style="font-size:0.78rem;color:var(--text2)">Agendadas para repetição espaçada. Clique abaixo para refazê-las agora.</div>' +
+        '<button class="btn btn-primary" style="margin-top:10px;background:#FF5252" onclick="retryWrongQuestions()">↺ Refazer só as erradas</button>' +
+      '</div>';
+  }
+  c.innerHTML =
+    '<div class="quiz-result">' +
+      '<div class="quiz-result-score">' + emoji + ' ' + correct + '/' + answered + '</div>' +
+      '<div class="quiz-result-label">' + pct + '% de aproveitamento &nbsp;·&nbsp; ✅ ' + correct + ' &nbsp;·&nbsp; ❌ ' + wrong + '</div>' +
+      wrongHtml +
+      '<div style="display:flex;gap:10px;justify-content:center;margin-top:20px">' +
+        '<button class="btn btn-secondary" onclick="backToFilters()">&#8592; Filtros</button>' +
+        '<button class="btn btn-primary" onclick="startQuizAgain()">&#8635; Refazer</button>' +
+      '</div>' +
+    '</div>';
+}
+
+function retryWrongQuestions() {
+  var wrongQs = (quizState.wrongQueue || []).slice();
+  if (wrongQs.length === 0) return;
+  wrongQs.sort(function(){ return Math.random()-0.5; });
+  quizState = { current: 0, answered: new Array(wrongQs.length).fill(null), questions: wrongQs, started: true, wrongQueue: [], dueCount: wrongQs.length };
+  var notice = document.getElementById('sr-notice');
+  if (notice) { notice.textContent = '🔄 Refazendo ' + wrongQs.length + ' questão(ões) errada(s)'; notice.style.display = ''; }
+  renderQuiz();
+}
+
+function startQuizAgain() {
+  var qs = quizState.questions;
+  quizState.current = 0;
+  quizState.answered = new Array(qs.length).fill(null);
+  renderQuiz();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SUPABASE · AUTH · REPETIÇÃO ESPAÇADA
+// ══════════════════════════════════════════════════════════════════════════════
+
+var SUPABASE_URL = 'https://qnnfhdbmwwsrjfthhgbk.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_Htgb741Tbkb7bYSJIDkK3A_VTwZ4SoR';
+var _supabase = null;
+var currentUser = null;
+var srProgress = {};
+
+function loadSupabaseConfig() {
+  try {
+    var cfg = JSON.parse(localStorage.getItem('tj_sb_config') || '{}');
+    if (cfg.url) { SUPABASE_URL = cfg.url; var el=document.getElementById('sb-url-input'); if(el) el.value=cfg.url; }
+    if (cfg.key) { SUPABASE_KEY = cfg.key; var el2=document.getElementById('sb-key-input'); if(el2) el2.value=cfg.key; }
+  } catch(e) {}
+}
+function saveSupabaseConfig() {
+  var url = (document.getElementById('sb-url-input')||{}).value||'';
+  var key = (document.getElementById('sb-key-input')||{}).value||'';
+  SUPABASE_URL = url.trim(); SUPABASE_KEY = key.trim();
+  localStorage.setItem('tj_sb_config', JSON.stringify({url:SUPABASE_URL, key:SUPABASE_KEY}));
+}
+function initSupabase() {
+  loadSupabaseConfig();
+  if (!SUPABASE_URL || !SUPABASE_KEY) return null;
+  try { _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); return _supabase; }
+  catch(e) { console.warn('Supabase init failed:', e); return null; }
+}
+function switchAuthTab(tab) {
+  document.getElementById('auth-login-form').style.display = tab==='login' ? '' : 'none';
+  document.getElementById('auth-signup-form').style.display = tab==='signup' ? '' : 'none';
+  document.getElementById('tab-login-btn').classList.toggle('active', tab==='login');
+  document.getElementById('tab-signup-btn').classList.toggle('active', tab==='signup');
+  document.getElementById('auth-error').textContent = '';
+}
+async function doLogin() {
+  var email=(document.getElementById('auth-email')||{}).value||'';
+  var pass=(document.getElementById('auth-pass')||{}).value||'';
+  var errEl=document.getElementById('auth-error');
+  var btn=document.getElementById('auth-login-btn');
+  if (!email||!pass) { errEl.textContent='Preencha e-mail e senha.'; return; }
+  if (!_supabase) {
+    errEl.textContent='Configure o Supabase primeiro (clique em ⚙️ abaixo).';
+    document.getElementById('auth-config').open=true; return;
+  }
+  btn.disabled=true; btn.textContent='Entrando...'; errEl.textContent='';
+  try {
+    var res=await _supabase.auth.signInWithPassword({email:email.trim(), password:pass});
+    if (res.error) throw res.error;
+    currentUser=res.data.user; onAuthSuccess();
+  } catch(e) { errEl.textContent=e.message||'Erro ao entrar.'; }
+  finally { btn.disabled=false; btn.textContent='Entrar'; }
+}
+async function doSignup() {
+  var email=(document.getElementById('auth-signup-email')||{}).value||'';
+  var pass=(document.getElementById('auth-signup-pass')||{}).value||'';
+  var errEl=document.getElementById('auth-signup-error');
+  var btn=document.getElementById('auth-signup-btn');
+  if (!email||!pass) { errEl.textContent='Preencha todos os campos.'; return; }
+  if (pass.length<6) { errEl.textContent='Senha deve ter ao menos 6 caracteres.'; return; }
+  if (!_supabase) {
+    errEl.textContent='Configure o Supabase primeiro.';
+    document.getElementById('auth-config').open=true; return;
+  }
+  btn.disabled=true; btn.textContent='Criando...'; errEl.textContent='';
+  try {
+    var res=await _supabase.auth.signUp({email:email.trim(), password:pass});
+    if (res.error) throw res.error;
+    if (res.data.user && res.data.session) { currentUser=res.data.user; onAuthSuccess(); }
+    else { errEl.style.color='#66BB6A'; errEl.textContent='✅ Confirme seu e-mail para ativar a conta.'; }
+  } catch(e) { errEl.textContent=e.message||'Erro ao criar conta.'; }
+  finally { btn.disabled=false; btn.textContent='Criar conta'; }
+}
+async function doLogout() {
+  if (_supabase) await _supabase.auth.signOut();
+  currentUser=null; srProgress={};
+  document.getElementById('user-bar').style.display='none';
+  document.getElementById('auth-overlay').style.display='flex';
+}
+function onAuthSuccess() {
+  document.getElementById('auth-overlay').style.display='none';
+  var el=document.getElementById('user-email-display');
+  if (el && currentUser) el.textContent=currentUser.email;
+  document.getElementById('user-bar').style.display='flex';
+  loadSRProgress();
+}
+async function checkSession() {
+  if (!_supabase) return;
+  try {
+    var res=await _supabase.auth.getSession();
+    if (res.data && res.data.session && res.data.session.user) { currentUser=res.data.session.user; onAuthSuccess(); }
+  } catch(e) {}
+}
+
+// ── SM-2 Simplificado ─────────────────────────────────────────────────────
+function srGetCard(qid) {
+  return srProgress[qid] || {ease:2.5, interval:1, reps:0, dueDate:null, wrongCount:0};
+}
+function srIsDue(qid) {
+  var c=srGetCard(qid);
+  return !c.dueDate || new Date(c.dueDate)<=new Date();
+}
+function srUpdate(qid, correct) {
+  var c=srGetCard(qid);
+  if (correct) {
+    c.wrongCount=0;
+    if (c.reps===0) c.interval=1;
+    else if (c.reps===1) c.interval=3;
+    else c.interval=Math.round(c.interval*c.ease);
+    c.reps++;
+    c.ease=Math.max(1.3, c.ease+0.1);
+  } else {
+    c.wrongCount=(c.wrongCount||0)+1;
+    c.reps=0; c.interval=1;
+    c.ease=Math.max(1.3, c.ease-0.2);
+  }
+  var next=new Date(); next.setDate(next.getDate()+c.interval);
+  c.dueDate=next.toISOString();
+  srProgress[qid]=c;
+  saveSRProgress(qid, c);
+}
+function getDueQuestions(all) {
+  var now=new Date(), due=[], fresh=[];
+  all.forEach(function(q) {
+    var c=srGetCard(q.id);
+    if (!c.dueDate || new Date(c.dueDate)<=now) due.push(q);
+    else fresh.push(q);
+  });
+  due.sort(function(a,b){ return (srGetCard(a.id).dueDate||'0')<(srGetCard(b.id).dueDate||'0')?-1:1; });
+  return {due:due, fresh:fresh};
+}
+async function loadSRProgress() {
+  if (!_supabase||!currentUser) return;
+  try {
+    var res=await _supabase.from('sr_progress').select('question_id,ease,interval,reps,due_date,wrong_count').eq('user_id',currentUser.id);
+    if (res.data) res.data.forEach(function(r){ srProgress[r.question_id]={ease:r.ease,interval:r.interval,reps:r.reps,dueDate:r.due_date,wrongCount:r.wrong_count||0}; });
+  } catch(e) { console.warn('loadSRProgress:', e); }
+}
+async function saveSRProgress(qid, card) {
+  if (!_supabase||!currentUser) return;
+  try {
+    await _supabase.from('sr_progress').upsert({user_id:currentUser.id,question_id:qid,ease:card.ease,interval:card.interval,reps:card.reps,due_date:card.dueDate,wrong_count:card.wrongCount||0,updated_at:new Date().toISOString()},{onConflict:'user_id,question_id'});
+  } catch(e) { console.warn('saveSRProgress:', e); }
+}
+
+</script>
+</body>
+</html>
