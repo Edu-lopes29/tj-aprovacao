@@ -9,8 +9,9 @@
 *.jpg
 *.png
 
-# Questões (arquivo grande, gerado)
-questoes_data.js
+# Questões brutas (JSON)
+questoes_qconcursos.json
+questoes_site_completo-tj.json
 
 # Node
 node_modules/
@@ -19,6 +20,26 @@ package-lock.json
 
 # Scripts temporários
 *.backup*.html
+debug_*.html
+debug_*.json
+debug_*.txt
+debug_*.png
+
+# Scripts Python (scrapers, backend)
+scraper_*.py
+extrair_*.py
+gerar_*.py
+exportar_*.py
+iniciar_scrapers.py
+
+# Dados CSV
+*.csv
+
+# Dados JSON de questões brutas
+questoes_*.json
+
+# Cache Python
+__pycache__/
 
 # Windows
 desktop.ini

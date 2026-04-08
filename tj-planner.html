@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TJ — Planner de Aprovação</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="questoes_data.js" defer></script>
+<script src="questoes_TRF3.js" defer></script>
+<script src="questoes_PRF.js" defer></script>
+<script src="questoes_PF.js" defer></script>
+<script src="questoes_DETRAN.js" defer></script>
+<script src="questoes_POLICIA.js" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -237,6 +243,98 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .filter-btn{font-family:'Outfit',sans-serif;font-size:0.78rem;font-weight:600;padding:6px 13px;border-radius:99px;border:1.5px solid var(--border);background:var(--card);color:var(--text2);cursor:pointer;transition:all 0.2s}
 .filter-btn.active{border-color:#6C63FF;color:#fff;background:#6C63FF}
 .filter-btn.orange.active{border-color:#FF9800;color:#fff;background:#FF9800}
+
+/* ── Lei Seca ─────────────────────────────────────────────────────────────── */
+.ls-toolbar{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:10px}
+.ls-toolbar-row{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.ls-toolbar-group{display:flex;gap:3px;align-items:center}
+.ls-toolbar-sep{width:1px;height:20px;background:var(--border);margin:0 4px;flex-shrink:0}
+.ls-tool-btn{font-family:inherit;font-size:0.78rem;font-weight:600;padding:4px 9px;border-radius:5px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;transition:all 0.15s;white-space:nowrap;line-height:1.3}
+.ls-tool-btn:hover,.ls-tool-btn.active{background:#6C63FF22;border-color:#6C63FF;color:var(--text)}
+.ls-clear-btn{color:#FF7070;border-color:#FF525444}
+.ls-clear-btn:hover{background:rgba(255,82,82,0.12)}
+.ls-font-sel{background:var(--bg);border:1px solid var(--border);color:var(--text2);border-radius:5px;padding:4px 6px;font-size:0.76rem;font-family:inherit;outline:none;cursor:pointer;transition:border-color 0.15s}
+.ls-font-sel:focus{border-color:#6C63FF}
+.ls-color-chip{width:24px;height:24px;border-radius:5px;border:2.5px solid transparent;cursor:pointer;transition:transform 0.12s,border-color 0.12s,box-shadow 0.12s;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;color:rgba(0,0,0,0.5)}
+.ls-color-chip:hover{transform:scale(1.2);border-color:rgba(255,255,255,0.5)}
+.ls-color-chip.active-tool{border-color:#fff;box-shadow:0 0 0 2px #6C63FF;transform:scale(1.12)}
+.ls-color-picker-wrap{position:relative}
+.ls-color-preview{width:28px;height:28px;border-radius:5px;border:2px solid rgba(255,255,255,0.2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.8rem;color:rgba(0,0,0,0.6);transition:transform 0.12s;user-select:none}
+.ls-color-preview:hover{transform:scale(1.1);border-color:rgba(255,255,255,0.5)}
+.ls-editor{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 26px;min-height:520px;font-size:0.92rem;line-height:1.8;color:var(--text);outline:none;transition:border-color 0.2s;word-break:break-word;overflow-y:auto;max-height:calc(100vh - 260px)}
+.ls-editor:focus{border-color:#6C63FF}
+.ls-editor mark{border-radius:2px;padding:1px 0}
+.ls-sidebar{width:280px;flex-shrink:0;display:flex;flex-direction:column;gap:12px;position:sticky;top:0}
+.ls-side-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.ls-side-title{font-family:'Outfit',sans-serif;font-size:0.82rem;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.ls-leg-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.ls-leg-row:last-child{border-bottom:none}
+.ls-leg-swatch{width:18px;height:18px;border-radius:3px;flex-shrink:0;cursor:pointer;border:2px solid transparent;transition:transform 0.12s}
+.ls-leg-swatch:hover{transform:scale(1.2)}
+.ls-leg-label{font-size:0.75rem;color:var(--text2);flex:1}
+.ls-leg-input{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:0.74rem;width:100%;outline:none;padding:1px 3px}
+.ls-art-legenda{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px}
+.ls-art-badge{font-size:0.68rem;padding:2px 7px;border-radius:99px;white-space:nowrap}
+.ls-art-row{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:6px;font-size:0.76rem;border:1px solid rgba(255,255,255,0.06)}
+.ls-art-num{font-family:'Outfit',sans-serif;font-weight:700;min-width:48px;color:var(--text)}
+.ls-art-lei{font-size:0.66rem;color:var(--text3);min-width:50px}
+.ls-art-status{margin-left:auto;font-size:0.68rem;padding:1px 6px;border-radius:99px}
+/* Disponibilidade */
+.ls-disp-form{display:flex;flex-direction:column;gap:8px}
+.ls-disp-row{display:flex;align-items:center;gap:8px}
+.ls-disp-input{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 10px;font-size:0.85rem;width:70px;outline:none;font-family:inherit;transition:border-color 0.2s;text-align:center}
+.ls-disp-input:focus{border-color:#6C63FF}
+.ls-disp-bar-wrap{background:var(--border);border-radius:99px;height:8px;flex:1;overflow:hidden}
+.ls-disp-bar{height:100%;border-radius:99px;background:linear-gradient(90deg,#6C63FF,#A78BFA);transition:width 0.5s}
+.ls-disp-alert{font-size:0.75rem;padding:7px 10px;border-radius:6px;margin-top:4px;line-height:1.4}
+.ls-disp-alert.ok{background:rgba(76,175,80,0.12);color:#66BB6A;border:1px solid #4CAF5044}
+.ls-disp-alert.warn{background:rgba(255,167,38,0.12);color:#FFB300;border:1px solid #FFB30044}
+.ls-disp-alert.danger{background:rgba(244,67,54,0.12);color:#EF5350;border:1px solid #F4433644}
+@media(max-width:900px){.ls-sidebar{width:100%}}
+
+/* ── Flashcards ────────────────────────────────────────────────────────────── */
+.fc-container{max-width:720px;margin:0 auto}
+.fc-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;margin-bottom:20px}
+.fc-header-left{}
+.fc-title{font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:800}
+.fc-subtitle{font-size:0.8rem;color:var(--text2);margin-top:3px}
+.fc-points-row{display:flex;gap:10px}
+.fc-points-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 16px;text-align:center}
+.fc-points-num{display:block;font-family:'Outfit',sans-serif;font-size:1.4rem;font-weight:800;color:#A78BFA;line-height:1}
+.fc-points-lbl{font-size:0.63rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px}
+.fc-filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:20px}
+.fc-progress-row{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.fc-progress-wrap{flex:1;height:7px;background:var(--border);border-radius:99px;overflow:hidden}
+.fc-progress-fill{height:100%;background:linear-gradient(90deg,#6C63FF,#A78BFA);border-radius:99px;transition:width 0.4s}
+.fc-progress-lbl{font-size:0.75rem;color:var(--text2);min-width:40px;text-align:right;font-family:'Outfit',sans-serif}
+/* Card flip 3D */
+.fc-scene{width:100%;perspective:1200px;margin-bottom:16px;cursor:pointer}
+.fc-card{position:relative;width:100%;min-height:280px;transform-style:preserve-3d;transition:transform 0.55s cubic-bezier(.4,.2,.2,1)}
+.fc-card.flipped{transform:rotateY(180deg)}
+.fc-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:28px 26px;display:flex;flex-direction:column;gap:10px}
+.fc-face.fc-back{transform:rotateY(180deg);border-color:#6C63FF44}
+.fc-face-tag{font-family:'Outfit',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#A78BFA}
+.fc-face-body{font-size:0.9rem;line-height:1.65;color:var(--text);flex:1}
+.fc-face-hint{font-size:0.74rem;color:var(--text3);text-align:center;margin-top:auto;padding-top:10px}
+.fc-alts{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.fc-alt-btn{display:flex;align-items:flex-start;gap:11px;padding:11px 15px;border-radius:9px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;text-align:left;font-size:0.87rem;color:var(--text);line-height:1.5;font-family:inherit;transition:all 0.15s}
+.fc-alt-btn:hover:not(:disabled){border-color:#6C63FF;background:#6C63FF11}
+.fc-alt-btn.correct{border-color:#4CAF50;background:#4CAF5018}
+.fc-alt-btn.wrong{border-color:#F44336;background:#F4433618}
+.fc-alt-btn:disabled{cursor:default}
+.fc-alt-letter{font-weight:700;min-width:20px;color:#A78BFA}
+.fc-eval{margin-top:4px}
+.fc-eval-btn{flex:1;min-width:120px;padding:12px 10px;border-radius:10px;border:1.5px solid;cursor:pointer;font-size:0.82rem;font-family:'Outfit',sans-serif;font-weight:700;line-height:1.4;transition:all 0.18s}
+.fc-eval-btn small{font-family:'DM Sans',sans-serif;font-weight:400;font-size:0.7rem;display:block;margin-top:3px;opacity:0.8}
+.fc-eval-fail{background:rgba(244,67,54,0.08);border-color:#F4433644;color:#EF5350}
+.fc-eval-fail:hover{background:rgba(244,67,54,0.18);border-color:#F44336}
+.fc-eval-hard{background:rgba(255,167,38,0.08);border-color:#FFB30044;color:#FFB300}
+.fc-eval-hard:hover{background:rgba(255,167,38,0.2);border-color:#FFB300}
+.fc-eval-ok{background:rgba(76,175,80,0.08);border-color:#4CAF5044;color:#66BB6A}
+.fc-eval-ok:hover{background:rgba(76,175,80,0.18);border-color:#4CAF50}
+/* Animação de pontos flutuantes */
+@keyframes floatUp{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-50px)}}
+.fc-pts-float{position:fixed;font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:800;color:#66BB6A;pointer-events:none;animation:floatUp 1.2s ease forwards;z-index:9999}
 #filter-imp-alta.active{border-color:#FF5252;color:#fff;background:#C62828}
 #filter-imp-media.active{border-color:#FFB300;color:#fff;background:#E65100}
 #filter-imp-baixa.active{border-color:#66BB6A;color:#fff;background:#2E7D32}
@@ -384,6 +482,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div>
       <button class="auth-btn" id="auth-login-btn" onclick="doLogin()">Entrar</button>
       <div class="auth-error" id="auth-error"></div>
+      <button onclick="document.getElementById('auth-overlay').style.display='none'" style="width:100%;margin-top:10px;background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:9px;font-size:0.82rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">Usar sem conta (modo local)</button>
     </div>
     <div id="auth-signup-form" style="display:none">
       <div class="auth-form-group">
@@ -441,6 +540,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <button class="main-tab" onclick="switchMainTab('materias')">📚 Matérias</button>
   <button class="main-tab" onclick="switchMainTab('estatisticas')">📊 Estatísticas</button>
   <button class="main-tab" onclick="switchMainTab('questoes')">📝 Questões</button>
+  <button class="main-tab" onclick="switchMainTab('leiseca')">⚖️ Lei Seca</button>
+  <button class="main-tab" onclick="switchMainTab('flashcards')">🃏 Flashcards</button>
 </nav>
 
 <div class="tab-content active" id="tab-planejamento">
@@ -501,11 +602,325 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </div>
 
+<div class="tab-content" id="tab-leiseca">
+  <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+
+    <!-- PAINEL ESQUERDO: texto da lei + ferramentas -->
+    <div style="flex:1;min-width:0">
+
+      <!-- Barra de ferramentas de formatação -->
+      <div class="ls-toolbar" id="ls-toolbar">
+
+        <!-- Linha 1: formatação de texto -->
+        <div class="ls-toolbar-row">
+          <span class="ls-toolbar-group">
+            <button class="ls-tool-btn" id="ls-btn-bold"      onclick="lsFmt('bold')"      title="Negrito (Ctrl+B)"><b>B</b></button>
+            <button class="ls-tool-btn" id="ls-btn-italic"    onclick="lsFmt('italic')"    title="Itálico (Ctrl+I)"><i>I</i></button>
+            <button class="ls-tool-btn" id="ls-btn-underline" onclick="lsFmt('underline')" title="Sublinhado (Ctrl+U)"><u>U</u></button>
+            <button class="ls-tool-btn" id="ls-btn-strike"    onclick="lsFmt('strikeThrough')" title="Tachado"><s>S</s></button>
+          </span>
+
+          <span class="ls-toolbar-sep"></span>
+
+          <!-- Cor do texto -->
+          <span class="ls-toolbar-group" style="align-items:center;gap:4px">
+            <span style="font-size:0.7rem;color:var(--text3)">Texto:</span>
+            <div class="ls-color-picker-wrap">
+              <div class="ls-color-preview" id="ls-text-preview" style="background:#E8EAF0" onclick="document.getElementById('ls-text-color-inp').click()" title="Cor do texto">A</div>
+              <input type="color" id="ls-text-color-inp" value="#E8EAF0" style="opacity:0;width:0;height:0;position:absolute" oninput="lsTextColor(this.value)" onchange="lsTextColor(this.value)">
+            </div>
+          </span>
+
+          <span class="ls-toolbar-sep"></span>
+
+          <!-- Marcadores de cor (highlight) -->
+          <span class="ls-toolbar-group" style="align-items:center;gap:4px">
+            <span style="font-size:0.7rem;color:var(--text3)">Marca:</span>
+            <div id="ls-color-btns" style="display:flex;gap:3px"></div>
+          </span>
+
+          <span class="ls-toolbar-sep"></span>
+
+          <!-- Fonte -->
+          <span class="ls-toolbar-group">
+            <select class="ls-font-sel" id="ls-font-family" onchange="lsApplyFont(this.value)" style="min-width:90px">
+              <option value="">Fonte</option>
+              <option value="DM Sans,sans-serif">DM Sans</option>
+              <option value="Outfit,sans-serif">Outfit</option>
+              <option value="Arial,sans-serif">Arial</option>
+              <option value="Georgia,serif">Georgia</option>
+              <option value="Times New Roman,serif">Times New Roman</option>
+              <option value="Courier New,monospace">Mono</option>
+            </select>
+            <select class="ls-font-sel" id="ls-font-size" onchange="lsApplySize(this.value)" style="min-width:72px">
+              <option value="">Tamanho</option>
+              <option value="11px">11px</option>
+              <option value="13px">13px</option>
+              <option value="15px">15px</option>
+              <option value="17px">17px</option>
+              <option value="20px">20px</option>
+              <option value="24px">24px</option>
+              <option value="28px">28px</option>
+            </select>
+          </span>
+
+          <span class="ls-toolbar-sep"></span>
+
+          <!-- Símbolos -->
+          <span class="ls-toolbar-group">
+            <button class="ls-tool-btn" onclick="lsInsertSym('→ ')" title="Seta">→</button>
+            <button class="ls-tool-btn" onclick="lsInsertSym('★ ')" title="Estrela">★</button>
+            <button class="ls-tool-btn" onclick="lsInsertSym('⚠ ')" title="Atenção">⚠</button>
+            <button class="ls-tool-btn" onclick="lsInsertSym('• ')" title="Marcador">•</button>
+            <button class="ls-tool-btn" onclick="lsInsertSym('§ ')" title="Parágrafo">§</button>
+          </span>
+
+          <span class="ls-toolbar-sep"></span>
+
+          <button class="ls-tool-btn ls-clear-btn" onclick="lsClearFmt()" title="Limpar toda formatação do trecho selecionado">✕ limpar</button>
+        </div>
+
+      </div>
+
+      <!-- Seletor de lei -->
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+        <select class="ls-font-sel" id="ls-lei-sel" onchange="lsLoadLei(this.value)" style="flex:1;min-width:200px;padding:8px 12px">
+          <option value="">📜 Selecione uma lei...</option>
+          <optgroup label="⚖️ Constitucional">
+            <option value="cf88">Constituição Federal — CF/88</option>
+            <option value="adct">ADCT — Ato das Disposições Transitórias</option>
+          </optgroup>
+          <optgroup label="📘 Direito Civil">
+            <option value="cc02">Código Civil — CC/2002 (L. 10.406)</option>
+            <option value="lindb">LINDB — Lei de Introdução (D-L 4.657/42)</option>
+            <option value="l8935">L. 8.935/94 — Serviços Notariais e Registrais</option>
+            <option value="l10257">L. 10.257/01 — Estatuto da Cidade</option>
+            <option value="l13709">L. 13.709/18 — LGPD</option>
+          </optgroup>
+          <optgroup label="📗 Processo Civil">
+            <option value="cpc15">CPC/2015 — L. 13.105</option>
+            <option value="l9307">L. 9.307/96 — Arbitragem</option>
+            <option value="l9099">L. 9.099/95 — Juizados Especiais Cíveis</option>
+            <option value="l7347">L. 7.347/85 — Ação Civil Pública</option>
+            <option value="l4717">L. 4.717/65 — Ação Popular</option>
+            <option value="l12016">L. 12.016/09 — Mandado de Segurança</option>
+          </optgroup>
+          <optgroup label="🔴 Penal e Processo Penal">
+            <option value="cp">Código Penal — Dec.-Lei 2.848/40</option>
+            <option value="cpp">Código de Processo Penal — Dec.-Lei 3.689/41</option>
+            <option value="l7210">L. 7.210/84 — LEP (Execução Penal)</option>
+            <option value="l9099jec">L. 9.099/95 — Juizados Especiais Criminais</option>
+            <option value="l11343">L. 11.343/06 — Lei de Drogas</option>
+            <option value="l8072">L. 8.072/90 — Crimes Hediondos</option>
+            <option value="l9613">L. 9.613/98 — Lavagem de Dinheiro</option>
+            <option value="l12850">L. 12.850/13 — Organização Criminosa</option>
+            <option value="l13869">L. 13.869/19 — Abuso de Autoridade</option>
+            <option value="l4898">L. 4.898/65 — Abuso de Autoridade (revogada, ref.)</option>
+          </optgroup>
+          <optgroup label="🟠 Trabalho e Previdência">
+            <option value="clt">CLT — Dec.-Lei 5.452/43</option>
+            <option value="l8213">L. 8.213/91 — Benefícios da Previdência Social</option>
+            <option value="l8212">L. 8.212/91 — Custeio da Seguridade Social</option>
+            <option value="cf88prev">CF/88 — Art. 194–204 (Seguridade Social)</option>
+          </optgroup>
+          <optgroup label="🟡 Administrativo">
+            <option value="l14133">L. 14.133/21 — Nova Lei de Licitações</option>
+            <option value="l8666">L. 8.666/93 — Licitações (revogada, ref.)</option>
+            <option value="l9784">L. 9.784/99 — Processo Administrativo Federal</option>
+            <option value="l8112">L. 8.112/90 — Estatuto dos Servidores Federais</option>
+            <option value="imp">L. 8.429/92 — Improbidade Administrativa</option>
+            <option value="l12527">L. 12.527/11 — Acesso à Informação (LAI)</option>
+            <option value="l13460">L. 13.460/17 — Defesa do Usuário do Serviço Público</option>
+            <option value="l9637">L. 9.637/98 — Organizações Sociais</option>
+            <option value="l9790">L. 9.790/99 — OSCIPs</option>
+            <option value="l12846">L. 12.846/13 — Lei Anticorrupção</option>
+          </optgroup>
+          <optgroup label="🏛️ Judiciário / TJ">
+            <option value="loman">LOMAN — LC 35/79</option>
+            <option value="l9296">L. 9.296/96 — Interceptação Telefônica</option>
+            <option value="lc101">LC 101/00 — Lei de Responsabilidade Fiscal</option>
+            <option value="l13140">L. 13.140/15 — Mediação</option>
+            <option value="l11419">L. 11.419/06 — Processo Eletrônico (PJe)</option>
+            <option value="l11417">L. 11.417/06 — Súmula Vinculante</option>
+            <option value="l9868">L. 9.868/99 — ADI / ADC</option>
+            <option value="l9882">L. 9.882/99 — ADPF</option>
+          </optgroup>
+          <optgroup label="📙 Empresarial / Tributário">
+            <option value="l6404">L. 6.404/76 — Lei das S.A.</option>
+            <option value="l11101">L. 11.101/05 — Falências e Recuperação</option>
+            <option value="ctn">CTN — L. 5.172/66</option>
+            <option value="l8137">L. 8.137/90 — Crimes Tributários</option>
+          </optgroup>
+          <optgroup label="👶 Estatutos Especiais">
+            <option value="eca">ECA — L. 8.069/90</option>
+            <option value="estatidoso">Estatuto do Idoso — L. 10.741/03</option>
+            <option value="l7853">L. 7.853/89 / L. 13.146/15 — PcD</option>
+            <option value="l11340">L. 11.340/06 — Lei Maria da Penha</option>
+            <option value="l9455">L. 9.455/97 — Tortura</option>
+            <option value="l7716">L. 7.716/89 — Crimes de Preconceito</option>
+            <option value="l8078">CDC — L. 8.078/90</option>
+          </optgroup>
+          <optgroup label="🌿 Direito Ambiental / Eleitoral">
+            <option value="l9605">L. 9.605/98 — Crimes Ambientais</option>
+            <option value="l4771">L. 4.771/65 — Código Florestal (ref.)</option>
+            <option value="l12651">L. 12.651/12 — Novo Código Florestal</option>
+            <option value="l9504">L. 9.504/97 — Lei Eleitoral</option>
+            <option value="l9096">L. 9.096/95 — Partidos Políticos</option>
+          </optgroup>
+          <option value="custom">📥 Colar texto manualmente</option>
+        </select>
+        <a id="ls-planalto-link" href="https://www4.planalto.gov.br/legislacao" target="_blank" class="btn btn-secondary" style="font-size:0.78rem">🔗 Planalto</a>
+        <button class="btn btn-secondary" onclick="lsSave()" style="font-size:0.78rem">💾 Salvar</button>
+        <button class="btn btn-secondary" onclick="lsClear()" style="font-size:0.78rem">🗑 Limpar</button>
+      </div>
+
+      <!-- Área editável da lei -->
+      <div id="ls-editor" class="ls-editor" contenteditable="true" spellcheck="false"
+           oninput="lsAutoSave()" onmouseup="lsOnSelect()" onkeyup="lsOnSelect()">
+        <p style="color:var(--text3);font-style:italic">Selecione uma lei acima ou cole o texto da lei para começar a marcar.</p>
+      </div>
+
+    </div>
+
+    <!-- PAINEL DIREITO: gabarito + artigos vistos -->
+    <div class="ls-sidebar">
+
+      <!-- Disponibilidade diária -->
+      <div class="ls-side-card" id="ls-disponibilidade-card">
+        <div class="ls-side-title">⏱ Disponibilidade de Hoje</div>
+        <div id="ls-disp-content"><!-- gerado por JS --></div>
+      </div>
+
+      <!-- Legenda de cores (editável) -->
+      <div class="ls-side-card">
+        <div class="ls-side-title">🎨 Legenda de Cores
+          <button class="ls-tool-btn" style="margin-left:auto;font-size:0.7rem" onclick="lsResetColors()">↺ reset</button>
+        </div>
+        <div id="ls-legend-list"><!-- gerado por JS --></div>
+      </div>
+
+      <!-- Artigos vistos em questões -->
+      <div class="ls-side-card">
+        <div class="ls-side-title">📌 Artigos Vistos em Questões</div>
+        <div style="font-size:0.72rem;color:var(--text3);margin-bottom:8px">Cores automáticas baseadas no seu desempenho:</div>
+        <div class="ls-art-legenda">
+          <span class="ls-art-badge" style="background:#1B5E2044;color:#66BB6A;border:1px solid #66BB6A55">✓ Acertou</span>
+          <span class="ls-art-badge" style="background:#F57F1722;color:#FFB300;border:1px solid #FFB30055">△ Errou 1x</span>
+          <span class="ls-art-badge" style="background:#B71C1C22;color:#FF5252;border:1px solid #FF525255">✗ Errou 2x+</span>
+          <span class="ls-art-badge" style="background:#1A2A4A;color:#64B5F6;border:1px solid #42A5F555">⟳ Revisão</span>
+          <span class="ls-art-badge" style="background:#2A1A4A;color:#CE93D8;border:1px solid #BA68C855">🎯 Nunca viu</span>
+        </div>
+        <div id="ls-art-list" style="margin-top:10px;display:flex;flex-direction:column;gap:4px;max-height:280px;overflow-y:auto">
+          <div style="font-size:0.75rem;color:var(--text3);text-align:center;padding:12px">Nenhum artigo registrado ainda.<br>Responda questões para rastrear.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="tab-content" id="tab-flashcards">
+  <div class="fc-container">
+    <!-- Cabeçalho com pontuação -->
+    <div class="fc-header">
+      <div class="fc-header-left">
+        <div class="fc-title">🃏 Flashcards</div>
+        <div class="fc-subtitle" id="fc-subtitle">Carregando...</div>
+      </div>
+      <div class="fc-points-row">
+        <div class="fc-points-card"><span class="fc-points-num" id="fc-pts">0</span><span class="fc-points-lbl">pontos</span></div>
+        <div class="fc-points-card"><span class="fc-points-num" id="fc-streak" style="color:#FF9800">0</span><span class="fc-points-lbl">🔥 sequência</span></div>
+        <div class="fc-points-card"><span class="fc-points-num" id="fc-due-count" style="color:#A78BFA">0</span><span class="fc-points-lbl">para revisar</span></div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="fc-filters" id="fc-filters">
+      <select class="quiz-select" id="fc-banco-sel" onchange="fcTrocarBanco()" style="min-width:160px">
+        <option value="tj">🏛️ TJ (8.680 questões)</option>
+        <option value="trf3">⚖️ TRF3 (1.904 questões)</option>
+        <option value="prf">🚔 PRF (915 questões)</option>
+        <option value="pf">🔎 PF (3.578 questões)</option>
+        <option value="detran">🚗 DETRAN (2.064 questões)</option>
+        <option value="policia">👮 Polícia PC/Penal (18.660 questões)</option>
+      </select>
+      <select class="quiz-select" id="fc-materia-sel" onchange="fcUpdateCount()" style="flex:1;min-width:160px">
+        <option value="">📚 Todas as matérias</option>
+      </select>
+      <select class="quiz-select" id="fc-modo-sel" style="min-width:160px">
+        <option value="due">🔄 Revisão (agendadas)</option>
+        <option value="all">📚 Todas</option>
+        <option value="erradas">❌ Só erradas</option>
+        <option value="novas">✨ Novas (nunca vistas)</option>
+      </select>
+      <span class="quiz-count" id="fc-count"></span>
+      <button class="btn btn-primary" onclick="fcStart()">▶ Iniciar</button>
+    </div>
+
+    <!-- Área do card -->
+    <div id="fc-area" style="display:none">
+      <div class="fc-progress-row">
+        <div class="fc-progress-wrap"><div class="fc-progress-fill" id="fc-progress-fill"></div></div>
+        <span class="fc-progress-lbl" id="fc-progress-lbl">0/0</span>
+        <button class="btn btn-secondary" style="font-size:0.75rem;padding:4px 10px" onclick="fcStop()">✕ Parar</button>
+      </div>
+
+      <!-- Card flip -->
+      <div class="fc-scene" id="fc-scene" onclick="fcFlip()">
+        <div class="fc-card" id="fc-card">
+          <div class="fc-face fc-front" id="fc-front">
+            <div class="fc-face-tag" id="fc-tag">MATÉRIA</div>
+            <div class="fc-face-body" id="fc-body-front"></div>
+            <div class="fc-face-hint">👆 Clique para revelar</div>
+          </div>
+          <div class="fc-face fc-back" id="fc-back">
+            <div class="fc-face-tag" id="fc-tag-back" style="color:#A78BFA">RESPOSTA</div>
+            <div class="fc-face-body" id="fc-body-back"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alternativas (frente) -->
+      <div id="fc-alts" class="fc-alts"></div>
+
+      <!-- Botões de avaliação (verso) -->
+      <div id="fc-eval" class="fc-eval" style="display:none">
+        <div style="font-size:0.82rem;color:var(--text2);margin-bottom:10px;text-align:center">Você sabia?</div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="fc-eval-btn fc-eval-fail" onclick="fcAnswer(false)">✗ Não sabia<br><small>+0 pts — revisar em 1d</small></button>
+          <button class="fc-eval-btn fc-eval-hard" onclick="fcAnswer('hard')">△ Com dificuldade<br><small>+5 pts — revisar em 2d</small></button>
+          <button class="fc-eval-btn fc-eval-ok" onclick="fcAnswer(true)">✓ Sabia!<br><small>+10 pts — revisar em 5d+</small></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultado final -->
+    <div id="fc-result" style="display:none">
+      <div class="quiz-result">
+        <div class="quiz-result-score" id="fc-result-score"></div>
+        <div class="quiz-result-label" id="fc-result-label"></div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+          <button class="btn btn-secondary" onclick="fcBackToFilters()">← Filtros</button>
+          <button class="btn btn-primary" onclick="fcStart()">↺ Mais cards</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="tab-content" id="tab-questoes">
   <div class="page-title">📝 Questões</div>
   <div class="quiz-container" style="max-width:780px;margin:0 auto">
     <div class="quiz-filters" id="quiz-filters">
       <div class="quiz-filters-header">Filtrar questões</div>
+      <select class="quiz-select" id="quiz-banco-sel" onchange="quizTrocarBanco()">
+        <option value="tj">🏛️ TJ (8.680 questões)</option>
+        <option value="trf3">⚖️ TRF3 (1.904 questões)</option>
+        <option value="prf">🚔 PRF (915 questões)</option>
+        <option value="pf">🔎 PF (3.578 questões)</option>
+        <option value="detran">🚗 DETRAN (2.064 questões)</option>
+        <option value="policia">👮 Polícia PC/Penal (18.660 questões)</option>
+      </select>
       <select class="quiz-select" id="quiz-materia-sel" onchange="onMateriaChange()">
         <option value="">📚 Todas as matérias</option>
       </select>
@@ -513,7 +928,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <option value="">📂 Todos os temas</option>
       </select>
       <select class="quiz-select" id="quiz-origem-sel" onchange="updateQuizCount()">
-        <option value="">📋 Todos os concursos</option>
+        <option value="">📋 Todos os exames</option>
       </select>
       <label class="quiz-check"><input type="checkbox" id="quiz-random"> 🔀 Aleatório</label>
       <span class="quiz-count" id="quiz-count">carregando...</span>
@@ -980,16 +1395,18 @@ var _dragJustEnded=false; // flag para evitar click após drag
 
 function switchMainTab(tab){
   currentMainTab=tab;
-  ['planejamento','materias','estatisticas','questoes'].forEach(function(t){
+  ['planejamento','materias','estatisticas','questoes','leiseca','flashcards'].forEach(function(t){
     var el=document.getElementById('tab-'+t);
     if(el) el.classList.toggle('active', t===tab);
   });
   document.querySelectorAll('.main-tab').forEach(function(btn,i){
-    btn.classList.toggle('active', ['planejamento','materias','estatisticas','questoes'][i]===tab);
+    btn.classList.toggle('active', ['planejamento','materias','estatisticas','questoes','leiseca','flashcards'][i]===tab);
   });
   if(tab==='materias') renderMaterias();
   if(tab==='estatisticas') renderStats();
   if(tab==='questoes') initQuiz();
+  if(tab==='leiseca') initLeiSeca();
+  if(tab==='flashcards') initFlashcards();
 }
 
 // Calcula total de semanas até 2 dias antes da prova
@@ -2296,28 +2713,47 @@ function renderAccuracyStats(all){
 
 var quizState = { current: 0, answered: [], questions: [], started: false };
 
+// Mapa de bancos de questões
+var BANCOS = {
+  tj:      { var: 'QUESTOES_OAB',     src: 'questoes_data.js' },
+  trf3:    { var: 'QUESTOES_TRF3',    src: 'questoes_TRF3.js' },
+  prf:     { var: 'QUESTOES_PRF',     src: 'questoes_PRF.js' },
+  pf:      { var: 'QUESTOES_PF',      src: 'questoes_PF.js' },
+  detran:  { var: 'QUESTOES_DETRAN',  src: 'questoes_DETRAN.js' },
+  policia: { var: 'QUESTOES_POLICIA', src: 'questoes_POLICIA.js' },
+};
+
+function getBancoAtual(selectorId) {
+  var sel = document.getElementById(selectorId);
+  return sel ? (sel.value || 'tj') : 'tj';
+}
+
+function getBancoQuestoes(banco) {
+  var info = BANCOS[banco] || BANCOS.tj;
+  return window[info.var] || null;
+}
+
+function quizTrocarBanco() {
+  var banco = getBancoAtual('quiz-banco-sel');
+  initQuizFiltros(banco);
+}
+
 function initQuiz() {
-  if (!window.QUESTOES_OAB) {
-    var c = document.getElementById('quiz-container');
-    if (c) c.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text2)">⏳ Carregando questões...</div>';
-    var sc = document.createElement('script');
-    sc.src = 'questoes_data.js';
-    sc.onload = function() { initQuiz(); };
-    sc.onerror = function() {
-      if (c) c.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#EF5350">❌ Erro ao carregar questoes_data.js.<br>Certifique-se de que o arquivo está na mesma pasta do HTML.</div>';
-    };
-    document.head.appendChild(sc);
-    return;
-  }
+  var banco = getBancoAtual('quiz-banco-sel');
+  initQuizFiltros(banco);
+}
+
+function initQuizFiltros(banco) {
+  var qs = getBancoQuestoes(banco) || [];
   var materiasSel = document.getElementById('quiz-materia-sel');
   var materias = []; var seen = {};
-  QUESTOES_OAB.forEach(function(q){ if (!seen[q.materia]){ seen[q.materia]=1; materias.push(q.materia); } });
+  qs.forEach(function(q){ if (!seen[q.materia]){ seen[q.materia]=1; materias.push(q.materia); } });
   materias.sort();
   materiasSel.innerHTML = '<option value="">📚 Todas as matérias</option>' +
     materias.map(function(m){ return '<option value="'+esc(m)+'">'+esc(m)+'</option>'; }).join('');
   var origemSel = document.getElementById('quiz-origem-sel');
   var origens = []; var seenO = {};
-  QUESTOES_OAB.forEach(function(q){ if (q.origem && !seenO[q.origem]){ seenO[q.origem]=1; origens.push(q.origem); } });
+  qs.forEach(function(q){ if (q.origem && !seenO[q.origem]){ seenO[q.origem]=1; origens.push(q.origem); } });
   origens.sort();
   origemSel.innerHTML = '<option value="">📋 Todos os exames</option>' +
     origens.map(function(o){ return '<option value="'+esc(o)+'">'+esc(o)+'</option>'; }).join('');
@@ -2325,10 +2761,12 @@ function initQuiz() {
 }
 
 function onMateriaChange() {
+  var banco = getBancoAtual('quiz-banco-sel');
+  var qs = getBancoQuestoes(banco) || [];
   var materia = document.getElementById('quiz-materia-sel').value;
   var temaSel = document.getElementById('quiz-tema-sel');
   var temas = []; var seen = {};
-  QUESTOES_OAB.forEach(function(q){
+  qs.forEach(function(q){
     if ((!materia || q.materia === materia) && !seen[q.tema]){ seen[q.tema]=1; temas.push(q.tema); }
   });
   temas.sort();
@@ -2338,11 +2776,13 @@ function onMateriaChange() {
 }
 
 function getFilteredQuestions() {
-  if (!window.QUESTOES_OAB) return [];
+  var banco = getBancoAtual('quiz-banco-sel');
+  var qs = getBancoQuestoes(banco);
+  if (!qs) return [];
   var materia = document.getElementById('quiz-materia-sel').value;
   var tema = document.getElementById('quiz-tema-sel').value;
   var origem = document.getElementById('quiz-origem-sel').value;
-  return QUESTOES_OAB.filter(function(q) {
+  return qs.filter(function(q) {
     if (materia && q.materia !== materia) return false;
     if (tema && q.tema !== tema) return false;
     if (origem && q.origem !== origem) return false;
@@ -2662,6 +3102,905 @@ async function saveSRProgress(qid, card) {
     await _supabase.from('sr_progress').upsert({user_id:currentUser.id,question_id:qid,ease:card.ease,interval:card.interval,reps:card.reps,due_date:card.dueDate,wrong_count:card.wrongCount||0,updated_at:new Date().toISOString()},{onConflict:'user_id,question_id'});
   } catch(e) { console.warn('saveSRProgress:', e); }
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// LEI SECA — sistema completo
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── Cores padrão (editáveis pelo usuário) ─────────────────────────────────────
+var LS_CORES_DEFAULT = [
+  { id:'verde',   hex:'#16A34A', label:'Petição Inicial',            alpha:'#16A34A33' },
+  { id:'rosa',    hex:'#EC4899', label:'Defesas / Respostas',        alpha:'#EC489933' },
+  { id:'azul',    hex:'#3B82F6', label:'Recursos',                   alpha:'#3B82F633' },
+  { id:'roxo',    hex:'#9333EA', label:'Fundamentação (art. chave)', alpha:'#9333EA33' },
+  { id:'amarelo', hex:'#F59E0B', label:'Fundamentação (alt.)',       alpha:'#F59E0B33' },
+  { id:'cinza',   hex:'#6B7280', label:'Prazos',                     alpha:'#6B728033' },
+];
+var lsCores = JSON.parse(localStorage.getItem('ls_cores')||'null') || JSON.parse(JSON.stringify(LS_CORES_DEFAULT));
+var lsActiveColor = lsCores[0].id; // cor ativa no momento
+
+// ── Estado da aba ─────────────────────────────────────────────────────────────
+var lsArtigosVistos = JSON.parse(localStorage.getItem('ls_artigos')||'{}');
+// { 'cf88.art5': { lei:'cf88', art:'5', acertos:2, erros:1, totalRespostas:3, ultimaVez:'2026-04-01' } }
+
+function lsSaveCores(){ localStorage.setItem('ls_cores', JSON.stringify(lsCores)); }
+function lsSaveArtigos(){ localStorage.setItem('ls_artigos', JSON.stringify(lsArtigosVistos)); }
+
+// ── Inicializa aba Lei Seca ───────────────────────────────────────────────────
+function initLeiSeca(){
+  lsRenderColorBtns();
+  lsRenderLegend();
+  lsRenderArtigosVistos();
+  lsRenderDisponibilidade();
+  // Restaura conteúdo salvo
+  var saved = localStorage.getItem('ls_editor_html');
+  var ed = document.getElementById('ls-editor');
+  if(ed && saved) ed.innerHTML = saved;
+}
+
+// ── Botões de cor na toolbar ───────────────────────────────────────────────────
+function lsRenderColorBtns(){
+  var container = document.getElementById('ls-color-btns');
+  if(!container) return;
+  container.innerHTML = '';
+  lsCores.forEach(function(c){
+    var btn = document.createElement('div');
+    btn.className = 'ls-color-chip' + (c.id===lsActiveColor?' active-tool':'');
+    btn.style.background = c.hex;
+    btn.title = c.label;
+    btn.dataset.cid = c.id;
+    btn.addEventListener('click', function(){ lsSetActiveColor(c.id); });
+    container.appendChild(btn);
+  });
+}
+
+function lsSetActiveColor(id){
+  lsActiveColor = id;
+  document.querySelectorAll('.ls-color-chip').forEach(function(el){
+    el.classList.toggle('active-tool', el.dataset.cid===id);
+  });
+  // Aplica highlight na seleção salva (se houver)
+  var hasSel = lsRestoreRange();
+  if(hasSel) lsHighlight();
+  else document.getElementById('ls-editor').focus();
+}
+
+// ── Salva range antes de abrir picker (foco sai do editor) ───────────────────
+var lsSavedRange = null;
+function lsSaveRange(){
+  var sel = window.getSelection();
+  if(sel && sel.rangeCount > 0) lsSavedRange = sel.getRangeAt(0).cloneRange();
+}
+function lsRestoreRange(){
+  if(!lsSavedRange) return false;
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(lsSavedRange);
+  return !lsSavedRange.collapsed;
+}
+
+// Guarda range ao clicar em qualquer botão da toolbar
+document.addEventListener('mousedown', function(e){
+  var toolbar = document.getElementById('ls-toolbar');
+  if(toolbar && toolbar.contains(e.target)){
+    lsSaveRange();
+  }
+}, true);
+
+// ── Formatação bold/italic/underline/strike ───────────────────────────────────
+function lsFmt(cmd){
+  lsRestoreRange();
+  document.execCommand(cmd);
+  lsUpdateToolbarState();
+  lsAutoSave();
+  document.getElementById('ls-editor').focus();
+}
+
+// ── Cor do texto ──────────────────────────────────────────────────────────────
+function lsTextColor(hex){
+  document.getElementById('ls-text-preview').style.background = hex;
+  document.getElementById('ls-text-preview').style.color = lsContrastColor(hex);
+  lsRestoreRange();
+  lsWrapSelection('span', function(el){
+    el.style.color = hex;
+    el.dataset.type = 'textcolor';
+  });
+  lsAutoSave();
+}
+
+// ── Highlight (marca-texto) ───────────────────────────────────────────────────
+function lsHighlight(){
+  var cor = lsCores.find(function(c){ return c.id===lsActiveColor; });
+  if(!cor) return;
+  lsRestoreRange();
+  lsWrapSelection('mark', function(el){
+    el.dataset.cid = cor.id;
+    el.style.background = cor.alpha;
+    el.style.borderBottom = '2px solid ' + cor.hex;
+    el.style.borderRadius = '2px';
+    el.style.color = 'inherit';
+  });
+  lsAutoSave();
+}
+
+// ── Fonte e tamanho ───────────────────────────────────────────────────────────
+function lsApplyFont(val){
+  if(!val) return;
+  lsRestoreRange();
+  lsWrapSelection('span', function(el){
+    el.style.fontFamily = val;
+    el.dataset.type = 'font';
+  });
+  lsAutoSave();
+  document.getElementById('ls-font-family').value = '';
+}
+function lsApplySize(val){
+  if(!val) return;
+  lsRestoreRange();
+  lsWrapSelection('span', function(el){
+    el.style.fontSize = val;
+    el.dataset.type = 'size';
+  });
+  lsAutoSave();
+  document.getElementById('ls-font-size').value = '';
+}
+
+// ── Envolve seleção em elemento (funciona mesmo com seleção parcial) ──────────
+function lsWrapSelection(tagName, applyFn){
+  var sel = window.getSelection();
+  if(!sel || sel.isCollapsed) return;
+  var range = sel.getRangeAt(0);
+
+  // Tenta surroundContents simples primeiro
+  try {
+    var el = document.createElement(tagName);
+    applyFn(el);
+    range.surroundContents(el);
+    sel.removeAllRanges();
+    return;
+  } catch(e) {}
+
+  // Fallback para seleção multi-elemento: extrai, envolve, re-insere
+  try {
+    var fragment = range.extractContents();
+    var wrapper = document.createElement(tagName);
+    applyFn(wrapper);
+    wrapper.appendChild(fragment);
+    range.insertNode(wrapper);
+    // Limpa spans vazios deixados
+    wrapper.parentNode && wrapper.parentNode.normalize();
+    sel.removeAllRanges();
+  } catch(e2) {
+    console.warn('lsWrapSelection fallback falhou:', e2);
+  }
+}
+
+// ── Limpa toda formatação da seleção ──────────────────────────────────────────
+function lsClearFmt(){
+  lsRestoreRange();
+  var sel = window.getSelection();
+  if(!sel || sel.isCollapsed){ showToast('Selecione um trecho para limpar', 'error'); return; }
+  // Remove todos os spans/marks filhos dentro da seleção
+  document.execCommand('removeFormat');
+  // Também remove marks de highlight
+  var ed = document.getElementById('ls-editor');
+  ed.querySelectorAll('mark, span[data-type]').forEach(function(el){
+    // Só remove os que estão dentro da seleção atual
+    var r = document.createRange();
+    r.selectNode(el);
+    var sel2 = window.getSelection();
+    if(sel2.rangeCount && sel2.getRangeAt(0).intersectsNode(el)){
+      var parent = el.parentNode;
+      while(el.firstChild) parent.insertBefore(el.firstChild, el);
+      parent.removeChild(el);
+    }
+  });
+  lsAutoSave();
+}
+
+// ── Atualiza estado visual dos botões (negrito/itálico ativo) ─────────────────
+function lsUpdateToolbarState(){
+  ['bold','italic','underline','strikeThrough'].forEach(function(cmd){
+    var map = {bold:'ls-btn-bold',italic:'ls-btn-italic',underline:'ls-btn-underline',strikeThrough:'ls-btn-strike'};
+    var btn = document.getElementById(map[cmd]);
+    if(btn) btn.classList.toggle('active', document.queryCommandState(cmd));
+  });
+}
+
+// ── Cor de contraste (texto claro/escuro sobre fundo colorido) ────────────────
+function lsContrastColor(hex){
+  var r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return (r*299+g*587+b*114)/1000 > 128 ? '#111' : '#fff';
+}
+
+// ── Insert símbolo ────────────────────────────────────────────────────────────
+function lsInsertSym(txt){
+  lsRestoreRange();
+  document.execCommand('insertText', false, txt);
+  lsAutoSave();
+}
+
+// ── Ao soltar o mouse / teclado: atualiza estado dos botões ──────────────────
+function lsOnSelect(){
+  lsUpdateToolbarState();
+}
+
+// ── Auto-salva HTML do editor ─────────────────────────────────────────────────
+var lsSaveTimer = null;
+function lsAutoSave(){
+  clearTimeout(lsSaveTimer);
+  lsSaveTimer = setTimeout(function(){
+    var ed = document.getElementById('ls-editor');
+    if(ed) localStorage.setItem('ls_editor_html', ed.innerHTML);
+  }, 800);
+}
+
+// ── Salva manualmente ─────────────────────────────────────────────────────────
+function lsSave(){
+  var ed = document.getElementById('ls-editor');
+  if(ed) localStorage.setItem('ls_editor_html', ed.innerHTML);
+  showToast('Lei seca salva!', 'success');
+}
+
+// ── Limpa editor ─────────────────────────────────────────────────────────────
+function lsClear(){
+  if(!confirm('Apagar todo o conteúdo do editor?')) return;
+  var ed = document.getElementById('ls-editor');
+  if(ed) ed.innerHTML = '<p style="color:var(--text3);font-style:italic">Selecione uma lei acima ou cole o texto da lei para começar a marcar.</p>';
+  localStorage.removeItem('ls_editor_html');
+}
+
+// ── Carrega lei pré-definida ──────────────────────────────────────────────────
+var LS_PLANALTO_URLS = {
+  // Constitucional
+  cf88:    'https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm',
+  adct:    'https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm#adct',
+  // Civil
+  cc02:    'https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm',
+  lindb:   'https://www.planalto.gov.br/ccivil_03/decreto-lei/del4657compilado.htm',
+  l8935:   'https://www.planalto.gov.br/ccivil_03/leis/l8935.htm',
+  l10257:  'https://www.planalto.gov.br/ccivil_03/leis/leis_2001/l10257.htm',
+  l13709:  'https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm',
+  // Processo Civil
+  cpc15:   'https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13105.htm',
+  l9307:   'https://www.planalto.gov.br/ccivil_03/leis/l9307.htm',
+  l9099:   'https://www.planalto.gov.br/ccivil_03/leis/l9099.htm',
+  l7347:   'https://www.planalto.gov.br/ccivil_03/leis/l7347orig.htm',
+  l4717:   'https://www.planalto.gov.br/ccivil_03/leis/l4717.htm',
+  l12016:  'https://www.planalto.gov.br/ccivil_03/_ato2007-2010/2009/lei/l12016.htm',
+  // Penal e Processo Penal
+  cp:      'https://www.planalto.gov.br/ccivil_03/decreto-lei/del2848compilado.htm',
+  cpp:     'https://www.planalto.gov.br/ccivil_03/decreto-lei/del3689compilado.htm',
+  l7210:   'https://www.planalto.gov.br/ccivil_03/leis/l7210.htm',
+  l9099jec:'https://www.planalto.gov.br/ccivil_03/leis/l9099.htm',
+  l11343:  'https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11343.htm',
+  l8072:   'https://www.planalto.gov.br/ccivil_03/leis/l8072.htm',
+  l9613:   'https://www.planalto.gov.br/ccivil_03/leis/l9613.htm',
+  l12850:  'https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2013/lei/l12850.htm',
+  l13869:  'https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2019/lei/l13869.htm',
+  l4898:   'https://www.planalto.gov.br/ccivil_03/leis/l4898.htm',
+  // Trabalho e Previdência
+  clt:     'https://www.planalto.gov.br/ccivil_03/decreto-lei/del5452compilado.htm',
+  l8213:   'https://www.planalto.gov.br/ccivil_03/leis/l8213compilado.htm',
+  l8212:   'https://www.planalto.gov.br/ccivil_03/leis/l8212compilado.htm',
+  cf88prev:'https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm#art194',
+  // Administrativo
+  l14133:  'https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2021/lei/l14133.htm',
+  l8666:   'https://www.planalto.gov.br/ccivil_03/leis/l8666cons.htm',
+  l9784:   'https://www.planalto.gov.br/ccivil_03/leis/l9784.htm',
+  l8112:   'https://www.planalto.gov.br/ccivil_03/leis/l8112compilado.htm',
+  imp:     'https://www.planalto.gov.br/ccivil_03/leis/l8429.htm',
+  l12527:  'https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12527.htm',
+  l13460:  'https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2017/lei/l13460.htm',
+  l9637:   'https://www.planalto.gov.br/ccivil_03/leis/l9637.htm',
+  l9790:   'https://www.planalto.gov.br/ccivil_03/leis/l9790.htm',
+  l12846:  'https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2013/lei/l12846.htm',
+  // Judiciário / TJ
+  loman:   'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp35.htm',
+  l9296:   'https://www.planalto.gov.br/ccivil_03/leis/l9296.htm',
+  lc101:   'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp101.htm',
+  l13140:  'https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13140.htm',
+  l11419:  'https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11419.htm',
+  l11417:  'https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11417.htm',
+  l9868:   'https://www.planalto.gov.br/ccivil_03/leis/l9868.htm',
+  l9882:   'https://www.planalto.gov.br/ccivil_03/leis/l9882.htm',
+  // Empresarial / Tributário
+  l6404:   'https://www.planalto.gov.br/ccivil_03/leis/l6404compilada.htm',
+  l11101:  'https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2005/lei/l11101.htm',
+  ctn:     'https://www.planalto.gov.br/ccivil_03/leis/l5172compilado.htm',
+  l8137:   'https://www.planalto.gov.br/ccivil_03/leis/l8137.htm',
+  // Estatutos Especiais
+  eca:     'https://www.planalto.gov.br/ccivil_03/leis/l8069.htm',
+  estatidoso:'https://www.planalto.gov.br/ccivil_03/leis/2003/l10.741.htm',
+  l7853:   'https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13146.htm',
+  l11340:  'https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11340.htm',
+  l9455:   'https://www.planalto.gov.br/ccivil_03/leis/l9455.htm',
+  l7716:   'https://www.planalto.gov.br/ccivil_03/leis/l7716.htm',
+  l8078:   'https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm',
+  // Ambiental / Eleitoral
+  l9605:   'https://www.planalto.gov.br/ccivil_03/leis/l9605.htm',
+  l4771:   'https://www.planalto.gov.br/ccivil_03/leis/l4771.htm',
+  l12651:  'https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12651.htm',
+  l9504:   'https://www.planalto.gov.br/ccivil_03/leis/l9504.htm',
+  l9096:   'https://www.planalto.gov.br/ccivil_03/leis/l9096.htm',
+};
+// URLs de fallback para leis com instabilidade no Planalto
+var LS_FALLBACK_URLS = {
+  l12527: [
+    'https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12527compilado.htm',
+    'https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12527cons.htm',
+    'https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12527orig.htm',
+  ],
+};
+
+async function lsLoadLei(val){
+  var link = document.getElementById('ls-planalto-link');
+  if(!val) return;
+  if(val==='custom'){
+    var ed = document.getElementById('ls-editor');
+    if(ed){ ed.innerHTML=''; ed.focus(); }
+    showToast('Cole o texto da lei no editor', 'success');
+    return;
+  }
+  var url = LS_PLANALTO_URLS[val];
+  if(!url) return;
+  if(link) link.href = url;
+
+  var ed = document.getElementById('ls-editor');
+  if(!ed) return;
+  ed.innerHTML = '<p style="color:var(--text3);font-style:italic">⏳ Importando lei do Planalto...</p>';
+
+  // Monta lista de URLs para tentar (principal + fallbacks)
+  var urlsParaTentar = [url].concat(LS_FALLBACK_URLS[val] || []);
+  var html = null;
+  var lastErr = null;
+
+  for(var i = 0; i < urlsParaTentar.length; i++){
+    try {
+      var tentativa = urlsParaTentar[i];
+      var resp = await fetch('/proxy?url=' + encodeURIComponent(tentativa));
+      if(!resp.ok) throw new Error('HTTP ' + resp.status);
+      var text = await resp.text();
+      if(text && text.length > 1000){ html = text; break; }
+      lastErr = new Error('Resposta muito curta (' + text.length + ' bytes)');
+    } catch(e) {
+      lastErr = e;
+    }
+  }
+
+  if(html){
+    ed.innerHTML = html;
+    lsAutoSave();
+    showToast('Lei importada com sucesso!', 'success');
+    lsHighlightArtigosNoEditor();
+  } else {
+    ed.innerHTML =
+      '<p style="color:#EF5350">❌ Não foi possível importar automaticamente (o servidor do Planalto pode estar instável).<br><br>' +
+      'Acesse o <a href="'+url+'" target="_blank" style="color:#A78BFA">link oficial</a>, ' +
+      'selecione todo o texto (Ctrl+A), copie (Ctrl+C) e cole aqui (Ctrl+V).</p>';
+    showToast('Planalto indisponível — use o link manual', 'error');
+  }
+}
+
+// ── Legenda de cores (editável) ───────────────────────────────────────────────
+function lsRenderLegend(){
+  var container = document.getElementById('ls-legend-list');
+  if(!container) return;
+  container.innerHTML = '';
+  lsCores.forEach(function(c, idx){
+    var row = document.createElement('div');
+    row.className = 'ls-leg-row';
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)';
+
+    // Swatch clicável com color picker nativo embutido
+    var swatchWrap = document.createElement('label');
+    swatchWrap.style.cssText = 'position:relative;cursor:pointer;flex-shrink:0';
+    swatchWrap.title = 'Clique para mudar a cor';
+
+    var swatch = document.createElement('div');
+    swatch.className = 'ls-leg-swatch';
+    swatch.style.cssText = 'width:28px;height:28px;border-radius:6px;background:'+c.hex+';border:2px solid rgba(255,255,255,0.2);transition:transform 0.1s;cursor:pointer';
+    swatch.onmouseover = function(){ this.style.transform='scale(1.15)'; };
+    swatch.onmouseout  = function(){ this.style.transform=''; };
+    swatch.dataset.idx = idx;
+
+    var picker = document.createElement('input');
+    picker.type = 'color';
+    picker.value = c.hex;
+    picker.style.cssText = 'position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:none;padding:0';
+    picker.dataset.idx = idx;
+    picker.addEventListener('input',  function(){ lsUpdateColor(parseInt(this.dataset.idx), this.value, null); });
+    picker.addEventListener('change', function(){ lsUpdateColor(parseInt(this.dataset.idx), this.value, null); });
+
+    swatchWrap.appendChild(swatch);
+    swatchWrap.appendChild(picker);
+
+    // Input de label
+    var inp = document.createElement('input');
+    inp.className = 'ls-leg-input';
+    inp.value = c.label;
+    inp.placeholder = 'Significado...';
+    inp.style.cssText = 'flex:1;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:0.76rem;padding:2px 4px;outline:none';
+    inp.dataset.idx = idx;
+    inp.addEventListener('input', function(){ lsUpdateColor(parseInt(this.dataset.idx), null, this.value); });
+    inp.addEventListener('focus', function(){ this.style.borderBottomColor='#6C63FF'; });
+    inp.addEventListener('blur',  function(){ this.style.borderBottomColor='var(--border)'; });
+
+    // Indicador de cor ativa
+    var dot = document.createElement('div');
+    dot.style.cssText = 'width:8px;height:8px;border-radius:50%;background:'+c.hex+';flex-shrink:0;opacity:0.6';
+    dot.dataset.dotIdx = idx;
+
+    row.appendChild(swatchWrap);
+    row.appendChild(inp);
+    row.appendChild(dot);
+    container.appendChild(row);
+  });
+}
+
+function escHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function lsUpdateColor(idx, newHex, newLabel){
+  if(newHex !== null && newHex !== undefined){
+    lsCores[idx].hex = newHex;
+    var r=parseInt(newHex.slice(1,3),16), g=parseInt(newHex.slice(3,5),16), b=parseInt(newHex.slice(5,7),16);
+    lsCores[idx].alpha = 'rgba('+r+','+g+','+b+',0.3)';
+    // Atualiza marks no editor
+    document.querySelectorAll('#ls-editor mark[data-cid="'+lsCores[idx].id+'"]').forEach(function(m){
+      m.style.background = lsCores[idx].alpha;
+      m.style.borderBottomColor = newHex;
+    });
+    // Atualiza chip na toolbar
+    var chip = document.querySelector('.ls-color-chip[data-cid="'+lsCores[idx].id+'"]');
+    if(chip){ chip.style.background = newHex; }
+    // Atualiza swatch na legenda
+    var sw = document.querySelector('.ls-leg-swatch[data-idx="'+idx+'"]');
+    if(sw) sw.style.background = newHex;
+    var dot = document.querySelector('[data-dot-idx="'+idx+'"]');
+    if(dot) dot.style.background = newHex;
+  }
+  if(newLabel !== null && newLabel !== undefined) lsCores[idx].label = newLabel;
+  lsSaveCores();
+  lsAutoSave();
+}
+
+function lsResetColors(){
+  if(!confirm('Restaurar cores padrão?')) return;
+  lsCores = JSON.parse(JSON.stringify(LS_CORES_DEFAULT));
+  lsSaveCores();
+  lsRenderColorBtns();
+  lsRenderLegend();
+  showToast('Cores restauradas!', 'success');
+}
+
+// ── Artigos vistos em questões ────────────────────────────────────────────────
+// Chamado externamente quando o usuário responde uma questão do quiz
+// artKey ex: 'cf88.art5'  lei ex: 'CF/88'  acertou: true/false
+function lsRegistrarArtigoVisto(artKey, lei, artNum, acertou){
+  var r = lsArtigosVistos[artKey] || { lei:lei, art:artNum, acertos:0, erros:0, totalRespostas:0, ultimaVez:null };
+  r.totalRespostas++;
+  if(acertou) r.acertos++; else r.erros++;
+  r.ultimaVez = new Date().toISOString().slice(0,10);
+  lsArtigosVistos[artKey] = r;
+  lsSaveArtigos();
+  lsRenderArtigosVistos();
+  lsHighlightArtigosNoEditor();
+}
+
+function lsGetArtigoStatus(r){
+  // Retorna: { label, bgColor, textColor, borderColor }
+  if(!r.totalRespostas) return { label:'🎯 Nunca viu', bg:'rgba(88,28,135,0.18)', text:'#CE93D8', border:'#9333EA55' };
+  var pct = r.acertos / r.totalRespostas;
+  var ultimaDate = r.ultimaVez ? new Date(r.ultimaVez) : null;
+  var diasDesde = ultimaDate ? Math.floor((Date.now()-ultimaDate.getTime())/(1000*60*60*24)) : 999;
+  if(pct===1 && diasDesde<=3)  return { label:'⚡ Recente + acerto', bg:'rgba(6,78,59,0.22)',   text:'#34D399', border:'#10B98155' };
+  if(pct>=0.7)                  return { label:'✓ Acertou',           bg:'rgba(27,94,32,0.22)',  text:'#66BB6A', border:'#4CAF5055' };
+  if(r.erros===1)               return { label:'△ Errou 1x',          bg:'rgba(245,127,23,0.18)',text:'#FFB300', border:'#FFB30055' };
+  if(r.erros>=2 && pct<0.5)    return { label:'✗ Errou 2x+',         bg:'rgba(183,28,28,0.22)', text:'#FF5252', border:'#F4433655' };
+  if(diasDesde>=14)             return { label:'⟳ Precisa revisão',   bg:'rgba(26,42,74,0.35)',  text:'#64B5F6', border:'#42A5F555' };
+  return                               { label:'~ Em progresso',       bg:'rgba(60,60,80,0.25)',  text:'#A78BFA', border:'#6C63FF55' };
+}
+
+function lsRenderArtigosVistos(){
+  var container = document.getElementById('ls-art-list');
+  if(!container) return;
+  var keys = Object.keys(lsArtigosVistos);
+  if(!keys.length){
+    container.innerHTML = '<div style="font-size:0.75rem;color:var(--text3);text-align:center;padding:12px">Nenhum artigo registrado ainda.<br>Responda questões para rastrear.</div>';
+    return;
+  }
+  // Ordena: mais erros primeiro, depois mais recentes
+  keys.sort(function(a,b){
+    var ra=lsArtigosVistos[a], rb=lsArtigosVistos[b];
+    return (rb.erros-ra.erros) || (rb.totalRespostas-ra.totalRespostas);
+  });
+  container.innerHTML = '';
+  keys.forEach(function(k){
+    var r = lsArtigosVistos[k];
+    var st = lsGetArtigoStatus(r);
+    var row = document.createElement('div');
+    row.className = 'ls-art-row';
+    row.style.cssText = 'background:'+st.bg+';border-color:'+st.border;
+    row.innerHTML =
+      '<span class="ls-art-num">Art. '+escHtml(r.art)+'</span>'+
+      '<span class="ls-art-lei">'+escHtml(r.lei)+'</span>'+
+      '<span style="font-size:0.68rem;color:var(--text3)">'+r.acertos+'/'+r.totalRespostas+'</span>'+
+      '<span class="ls-art-status" style="background:'+st.bg+';color:'+st.text+';border:1px solid '+st.border+'">'+st.label+'</span>';
+    container.appendChild(row);
+  });
+}
+
+// Destaca artigos no editor com base no desempenho
+function lsHighlightArtigosNoEditor(){
+  var ed = document.getElementById('ls-editor');
+  if(!ed) return;
+  // Procura padrões "Art. N" no texto e envolve com span colorido se há registro
+  // (funciona sobre texto puro, não sobrescreve marks existentes)
+  // Implementação leve: usa TreeWalker para encontrar text nodes
+  Object.keys(lsArtigosVistos).forEach(function(k){
+    var r = lsArtigosVistos[k];
+    var st = lsGetArtigoStatus(r);
+    var pattern = new RegExp('(Art\\.?\\s*'+r.art+'[^\\d])', 'gi');
+    // Percorre text nodes
+    var walker = document.createTreeWalker(ed, NodeFilter.SHOW_TEXT, null, false);
+    var nodes = [];
+    while(walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function(node){
+      if(node.parentElement && node.parentElement.classList && node.parentElement.classList.contains('ls-art-hl')) return;
+      if(pattern.test(node.textContent)){
+        var span = document.createElement('span');
+        span.className = 'ls-art-hl';
+        span.style.cssText = 'background:'+st.bg+';border-bottom:1.5px solid '+st.border+';border-radius:2px;cursor:default';
+        span.title = st.label + ' — ' + r.acertos + '/' + r.totalRespostas + ' corretas';
+        node.parentNode.insertBefore(span, node);
+        span.appendChild(node);
+      }
+    });
+  });
+}
+
+// ── Disponibilidade diária de estudo ─────────────────────────────────────────
+function lsRenderDisponibilidade(){
+  var container = document.getElementById('ls-disp-content');
+  if(!container) return;
+  var hoje = new Date().toISOString().slice(0,10);
+  var saved = JSON.parse(localStorage.getItem('ls_disp')||'{}');
+  var entrada = saved[hoje] || { horas: '', confirmado: false };
+  // Calcula carga do planejamento hoje
+  var cargaHoje = lsCalcularCargaHoje();
+
+  container.innerHTML = '';
+  var form = document.createElement('div');
+  form.className = 'ls-disp-form';
+
+  if(!entrada.confirmado){
+    form.innerHTML =
+      '<div style="font-size:0.78rem;color:var(--text2);margin-bottom:4px">Quantas horas você consegue estudar <b>hoje</b>?</div>'+
+      '<div class="ls-disp-row">'+
+        '<input type="number" class="ls-disp-input" id="ls-disp-horas" min="0" max="16" step="0.5" placeholder="0" value="'+(entrada.horas||'')+'">'+
+        '<span style="font-size:0.8rem;color:var(--text2)">horas</span>'+
+        '<button class="btn btn-primary" style="font-size:0.75rem;padding:6px 12px" onclick="lsConfirmarDisponibilidade()">Confirmar</button>'+
+      '</div>';
+  } else {
+    var horas = parseFloat(entrada.horas)||0;
+    var pct = cargaHoje > 0 ? Math.min(100, Math.round(horas/cargaHoje*100)) : 100;
+    var alertCls = pct>=100 ? 'ok' : (pct>=60 ? 'warn' : 'danger');
+    var alertMsg = pct>=100
+      ? '✅ Você tem tempo suficiente para cumprir o planejamento de hoje!'
+      : (pct>=60
+        ? '⚠ Tempo reduzido — priorize os tópicos de Alta importância.'
+        : '🔴 Tempo muito limitado — foque apenas no essencial hoje.');
+    form.innerHTML =
+      '<div class="ls-disp-row" style="justify-content:space-between">'+
+        '<span style="font-size:0.82rem;color:var(--text)"><b>'+horas+'h</b> disponíveis hoje</span>'+
+        '<button class="ls-tool-btn" onclick="lsEditarDisponibilidade()" style="font-size:0.7rem">✏ editar</button>'+
+      '</div>'+
+      '<div style="font-size:0.73rem;color:var(--text3);margin-bottom:4px">Planejamento: ~'+cargaHoje.toFixed(1)+'h necessárias</div>'+
+      '<div class="ls-disp-row" style="gap:8px">'+
+        '<div class="ls-disp-bar-wrap"><div class="ls-disp-bar" style="width:'+pct+'%;background:'+(pct>=100?'linear-gradient(90deg,#4CAF50,#66BB6A)':(pct>=60?'linear-gradient(90deg,#FF9800,#FFB300)':'linear-gradient(90deg,#F44336,#FF5252)'))+'"></div></div>'+
+        '<span style="font-size:0.72rem;color:var(--text2);min-width:32px">'+pct+'%</span>'+
+      '</div>'+
+      '<div class="ls-disp-alert '+alertCls+'">'+alertMsg+'</div>';
+  }
+
+  container.appendChild(form);
+}
+
+function lsConfirmarDisponibilidade(){
+  var input = document.getElementById('ls-disp-horas');
+  if(!input||!input.value) return;
+  var horas = parseFloat(input.value)||0;
+  var hoje = new Date().toISOString().slice(0,10);
+  var saved = JSON.parse(localStorage.getItem('ls_disp')||'{}');
+  saved[hoje] = { horas: horas, confirmado: true };
+  localStorage.setItem('ls_disp', JSON.stringify(saved));
+  lsRenderDisponibilidade();
+  showToast('Disponibilidade registrada: '+horas+'h', 'success');
+}
+
+function lsEditarDisponibilidade(){
+  var hoje = new Date().toISOString().slice(0,10);
+  var saved = JSON.parse(localStorage.getItem('ls_disp')||'{}');
+  if(saved[hoje]) saved[hoje].confirmado = false;
+  localStorage.setItem('ls_disp', JSON.stringify(saved));
+  lsRenderDisponibilidade();
+}
+
+// Estima horas necessárias no dia de hoje pelo planejamento
+function lsCalcularCargaHoje(){
+  var dayName = getTodayDayName();
+  var topicsHoje = getTopicsForWeek(currentWeek).filter(function(t){
+    var ts = state.topicStates[t.id];
+    var effDay = ts ? (ts.day||t.dia) : t.dia;
+    return effDay === dayName && ts && ts.status !== 'finalizado';
+  });
+  // Estima 45 min por tópico médio, 1h por tópico de alta importância
+  var horas = 0;
+  topicsHoje.forEach(function(t){
+    horas += t.importancia==='alta' ? 1.0 : (t.importancia==='media' ? 0.75 : 0.5);
+  });
+  return Math.max(0.5, horas);
+}
+
+// ── Integra disponibilidade no planejamento (banner no topo da aba) ───────────
+function lsMostrarBannerDisponibilidade(){
+  var hoje = new Date().toISOString().slice(0,10);
+  var saved = JSON.parse(localStorage.getItem('ls_disp')||'{}');
+  var entrada = saved[hoje];
+  var banner = document.getElementById('disp-banner');
+  if(!banner) return;
+  if(!entrada || !entrada.confirmado){
+    banner.style.display='flex';
+    banner.innerHTML =
+      '<span style="font-size:0.82rem">⏱ Declara quantas horas você tem para estudar hoje:</span>'+
+      '<input type="number" id="banner-horas" min="0" max="16" step="0.5" placeholder="2" style="width:56px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-size:0.82rem;outline:none;text-align:center">'+
+      '<button class="btn btn-primary" style="font-size:0.75rem;padding:5px 12px" onclick="lsBannerConfirmar()">OK</button>'+
+      '<button class="ls-tool-btn" onclick="document.getElementById(\'disp-banner\').style.display=\'none\'" style="margin-left:4px">✕</button>';
+  } else {
+    banner.style.display='none';
+  }
+}
+
+function lsBannerConfirmar(){
+  var inp = document.getElementById('banner-horas');
+  if(!inp||!inp.value) return;
+  var horas = parseFloat(inp.value)||0;
+  var hoje = new Date().toISOString().slice(0,10);
+  var saved = JSON.parse(localStorage.getItem('ls_disp')||'{}');
+  saved[hoje] = { horas:horas, confirmado:true };
+  localStorage.setItem('ls_disp', JSON.stringify(saved));
+  document.getElementById('disp-banner').style.display='none';
+  showToast('Registrado: '+horas+'h de estudo hoje', 'success');
+  if(currentMainTab==='leiseca') lsRenderDisponibilidade();
+}
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// FLASHCARDS
+// ══════════════════════════════════════════════════════════════════════════════
+
+var fcState = { questions:[], current:0, flipped:false, answered:0, correct:0, pts:0, streak:0, session:[] };
+var fcPts = parseInt(localStorage.getItem('fc_pts')||'0');
+var fcStreak = parseInt(localStorage.getItem('fc_streak')||'0');
+var fcWrongIds = JSON.parse(localStorage.getItem('fc_wrong')||'[]');
+
+function fcSave(){ localStorage.setItem('fc_pts', String(fcPts)); localStorage.setItem('fc_streak', String(fcStreak)); localStorage.setItem('fc_wrong', JSON.stringify(fcWrongIds)); }
+
+function fcTrocarBanco(){
+  var banco = getBancoAtual('fc-banco-sel');
+  initFlashcardsFiltros(banco);
+}
+
+function initFlashcards(){
+  var banco = getBancoAtual('fc-banco-sel');
+  initFlashcardsFiltros(banco);
+}
+
+function initFlashcardsFiltros(banco){
+  var qs = getBancoQuestoes(banco) || [];
+  var sel=document.getElementById('fc-materia-sel');
+  sel.innerHTML = '<option value="">📚 Todas as matérias</option>';
+  var seen={};
+  qs.forEach(function(q){ if(!seen[q.materia]&&q.materia){seen[q.materia]=1;} });
+  Object.keys(seen).sort().forEach(function(m){
+    var o=document.createElement('option'); o.value=m; o.textContent=m; sel.appendChild(o);
+  });
+  fcUpdateCount();
+  document.getElementById('fc-pts').textContent = fcPts.toLocaleString('pt-BR');
+  document.getElementById('fc-streak').textContent = fcStreak;
+  var due=qs.filter(function(q){ return srIsDue(q.id); }).length;
+  document.getElementById('fc-due-count').textContent = due;
+  document.getElementById('fc-subtitle').textContent = qs.length.toLocaleString('pt-BR')+' questões disponíveis · '+due+' para revisar hoje';
+}
+
+function fcGetPool(){
+  var banco = getBancoAtual('fc-banco-sel');
+  var qs = getBancoQuestoes(banco);
+  if(!qs) return [];
+  var materia=document.getElementById('fc-materia-sel').value;
+  var modo=document.getElementById('fc-modo-sel').value;
+  var pool = qs.filter(function(q){ return !materia||q.materia===materia; });
+  if(modo==='due')     pool=pool.filter(function(q){ return srIsDue(q.id); });
+  else if(modo==='erradas') pool=pool.filter(function(q){ return fcWrongIds.includes(q.id); });
+  else if(modo==='novas')   pool=pool.filter(function(q){ var c=srGetCard(q.id); return !c.dueDate; });
+  return pool;
+}
+
+function fcUpdateCount(){
+  var pool=fcGetPool();
+  var el=document.getElementById('fc-count');
+  if(el) el.textContent=pool.length.toLocaleString('pt-BR')+' cards';
+}
+
+function fcStart(){
+  var pool=fcGetPool();
+  if(!pool.length){ showToast('Nenhum card disponível para esses filtros','error'); return; }
+  // Embaralha, limita a 50 por sessão
+  pool.sort(function(){ return Math.random()-0.5; });
+  pool=pool.slice(0,50);
+  fcState={questions:pool,current:0,flipped:false,answered:0,correct:0,pts:0,streak:0,session:[]};
+  document.getElementById('fc-filters').style.display='none';
+  document.getElementById('fc-area').style.display='';
+  document.getElementById('fc-result').style.display='none';
+  fcRenderCard();
+}
+
+function fcStop(){
+  document.getElementById('fc-area').style.display='none';
+  document.getElementById('fc-result').style.display='none';
+  document.getElementById('fc-filters').style.display='';
+}
+
+function fcBackToFilters(){ fcStop(); }
+
+function fcRenderCard(){
+  var qs=fcState.questions;
+  var q=qs[fcState.current];
+  // Reset flip
+  fcState.flipped=false;
+  var card=document.getElementById('fc-card');
+  if(card) card.classList.remove('flipped');
+  document.getElementById('fc-eval').style.display='none';
+  // Progresso
+  var pct=Math.round((fcState.current/qs.length)*100);
+  document.getElementById('fc-progress-fill').style.width=pct+'%';
+  document.getElementById('fc-progress-lbl').textContent=(fcState.current+1)+'/'+qs.length;
+  // Frente
+  var tag=document.getElementById('fc-tag');
+  if(tag) tag.textContent=(q.materia||'GERAL').toUpperCase()+(q.banca?' · '+q.banca:'');
+  var body=document.getElementById('fc-body-front');
+  if(body) body.textContent=q.enunciado;
+  // Verso — mostra resposta correta (se houver) ou instrução
+  var back=document.getElementById('fc-body-back');
+  var tagBack=document.getElementById('fc-tag-back');
+  if(q.gabarito){
+    var gabText = q['gabarito'] ? 'Gabarito: ' + q.gabarito : '';
+    var altText = q[q.gabarito.toLowerCase()] || '';
+    if(back) back.textContent = gabText + (altText ? '\n\n' + altText : '');
+    if(tagBack) tagBack.textContent = 'GABARITO';
+  } else {
+    if(back) back.textContent = 'Avalie se você sabia responder esta questão.';
+    if(tagBack) tagBack.textContent = 'AVALIAÇÃO';
+  }
+  // Alternativas
+  var altsDiv=document.getElementById('fc-alts');
+  altsDiv.innerHTML='';
+  ['a','b','c','d','e'].forEach(function(l){
+    if(!q[l]) return;
+    var btn=document.createElement('button');
+    btn.className='fc-alt-btn'; btn.disabled=false;
+    btn.innerHTML='<span class="fc-alt-letter">'+l.toUpperCase()+'</span><span>'+esc(q[l])+'</span>';
+    btn.dataset.letter=l.toUpperCase();
+    btn.addEventListener('click',function(e){ e.stopPropagation(); fcSelectAlt(btn,q); });
+    altsDiv.appendChild(btn);
+  });
+}
+
+function fcSelectAlt(btn, q){
+  // Só responde se não tiver respondido ainda
+  if(document.getElementById('fc-alts').querySelector('.correct,.wrong')) return;
+  document.querySelectorAll('#fc-alts .fc-alt-btn').forEach(function(b){ b.disabled=true; });
+  if(q.gabarito){
+    document.querySelectorAll('#fc-alts .fc-alt-btn').forEach(function(b){
+      if(b.dataset.letter===q.gabarito) b.classList.add('correct');
+      else if(b===btn) b.classList.add('wrong');
+    });
+    var correct=(btn.dataset.letter===q.gabarito);
+    fcRegisterAnswer(correct, q);
+  } else {
+    // Sem gabarito — flip para avaliação manual
+    fcFlip();
+  }
+}
+
+function fcFlip(){
+  var card=document.getElementById('fc-card');
+  if(!card) return;
+  fcState.flipped=!fcState.flipped;
+  card.classList.toggle('flipped',fcState.flipped);
+  if(fcState.flipped){
+    document.getElementById('fc-eval').style.display='flex';
+    // Se tem gabarito e alternativas já respondidas, não mostra botões de avaliação
+    var q=fcState.questions[fcState.current];
+    if(q.gabarito && document.getElementById('fc-alts').querySelector('.correct,.wrong')){
+      document.getElementById('fc-eval').style.display='none';
+    }
+  } else {
+    document.getElementById('fc-eval').style.display='none';
+  }
+}
+
+function fcAnswer(result){
+  var q=fcState.questions[fcState.current];
+  var correct = result===true || result==='hard';
+  var hard    = result==='hard';
+  fcRegisterAnswer(correct, q, hard);
+}
+
+function fcRegisterAnswer(correct, q, hard){
+  // SM-2
+  srUpdate(q.id, correct);
+  // Pontos
+  var pts = correct ? (hard ? 5 : 10) : 0;
+  if(!correct && fcState.streak>=3) pts=-2; // penalidade pequena se quebra sequência longa
+  pts = Math.max(0, pts);
+  fcPts=Math.max(0, fcPts+pts);
+  if(correct){ fcState.streak++; } else { fcState.streak=0; }
+  if(!correct){ if(!fcWrongIds.includes(q.id)) fcWrongIds.push(q.id); }
+  else { fcWrongIds=fcWrongIds.filter(function(id){ return id!==q.id; }); }
+  fcState.answered++;
+  if(correct) fcState.correct++;
+  fcState.pts+=pts;
+  fcStreak=Math.max(fcStreak, fcState.streak);
+  fcSave();
+  // Atualiza contadores
+  document.getElementById('fc-pts').textContent=fcPts.toLocaleString('pt-BR');
+  document.getElementById('fc-streak').textContent=fcState.streak;
+  // Mostra pontos flutuantes
+  if(pts>0) fcShowFloatPts('+'+pts);
+  // Avança
+  setTimeout(function(){
+    if(fcState.current<fcState.questions.length-1){
+      fcState.current++;
+      fcRenderCard();
+    } else {
+      fcShowResult();
+    }
+  }, correct ? 600 : 900);
+}
+
+function fcShowFloatPts(txt){
+  var el=document.createElement('div');
+  el.className='fc-pts-float';
+  el.textContent=txt;
+  el.style.left=Math.random()*40+30+'%';
+  el.style.top='40%';
+  document.body.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 1200);
+}
+
+function fcShowResult(){
+  document.getElementById('fc-area').style.display='none';
+  document.getElementById('fc-result').style.display='';
+  var pct=Math.round(fcState.correct/fcState.answered*100)||0;
+  var emoji=pct>=80?'🏆':pct>=60?'👍':'📚';
+  document.getElementById('fc-result-score').textContent=emoji+' '+fcState.correct+'/'+fcState.answered;
+  document.getElementById('fc-result-label').textContent=
+    pct+'% de acerto · +'+fcState.pts+' pontos ganhos hoje · sequência: '+fcState.streak;
+}
+
+// ── Inicializa banner de disponibilidade ao carregar ──────────────────────────
+document.addEventListener('DOMContentLoaded', function(){
+  // Insere banner de disponibilidade acima do planejamento
+  var tabPlan = document.getElementById('tab-planejamento');
+  if(tabPlan){
+    var banner = document.createElement('div');
+    banner.id = 'disp-banner';
+    banner.style.cssText = 'display:none;align-items:center;gap:10px;background:#1E2035;border:1px solid #6C63FF44;border-radius:8px;padding:10px 14px;margin-bottom:14px;flex-wrap:wrap';
+    tabPlan.insertBefore(banner, tabPlan.firstChild);
+    lsMostrarBannerDisponibilidade();
+  }
+});
 
 </script>
 </body>
